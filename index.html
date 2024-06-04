@@ -95,8 +95,15 @@
     }
     #map {
       width: 100%;
-      height: 300px;
+      height: 50%; /* Adjusted height to show map and content */
       display: none;
+    }
+    #satellite-content {
+      padding: 10px;
+      height: 50%; /* Adjusted height to show map and content */
+      overflow-y: auto;
+      display: none;
+      background-color: #fff;
     }
     .comment-section {
       margin-top: 20px;
@@ -133,7 +140,6 @@
 </head>
 <body>
   <div id="header">Today’s Steel News</div>
-  <div id="header">Steel News</div>
   <div id="menu">
     <a href="#" onclick="showSection('today')">Today's News</a>
     <a href="#" onclick="showSection('past')">Past News</a>
@@ -159,8 +165,10 @@
       <!-- Past news will be dynamically populated here -->
     </div>
     <div id="map" data-section="satellite" style="display: none;"></div>
+    <div id="satellite-content"></div> <!-- Added for content display -->
   </div>
   <div id="footer">© 2024 Steel News Satellite</div>
+
   <script src='https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.js'></script>
   <script>
     mapboxgl.accessToken = 'pk.eyJ1IjoiaGFydWNoYW5uIiwiYSI6ImNsdnFlZWRidTAyNmkya21yem1wMjhzZHUifQ.GrEXJlVvv0ljdkQXoEQTTQ';
@@ -169,16 +177,19 @@
       style: 'mapbox://styles/mapbox/satellite-v9', // style URL
       center: [31.261181743597245,30.033253480264698], // initial center coordinates
       zoom: 1.9, // initial zoom
-      zoom: 1.0, // initial zoom
       pitch: 0, // pitch in degrees
       bearing: 0 // bearing in degrees
     });
+
     map.addControl(new mapboxgl.NavigationControl());
+
     map.on('style.load', () => {
       map.setFog({}); // Set the default atmosphere style
       spinGlobe();
     });
+
     let activeContentDiv = null;
+
     const newsArticles = [
       {
         title: "Vietnam targets higher steel output, lower emissions",
@@ -195,12 +206,14 @@
         category: "trade"
       }
     ];
+
     const sections = {
       produce: document.getElementById('produce'),
       decarbonization: document.getElementById('decarbonization'),
       trade: document.getElementById('trade'),
       other: document.getElementById('other')
     };
+
     newsArticles.forEach(article => {
       const newsItem = document.createElement('div');
       newsItem.className = 'news-item';
@@ -208,7 +221,7 @@
       const contentDiv = document.createElement('div');
       contentDiv.className = 'news-content';
       contentDiv.innerHTML = `
-        <button class="button" onclick='zoomToImage(${JSON.stringify(article.location)})'>Detail Image</button>
+        <button class="button" onclick='zoomToImage(${JSON.stringify(article.location)}, "${article.content}")'>Detail Image</button>
         <button class="button" onclick="showFullContent('${article.content}')">Detail Content</button>
         <div class="comment-section">
           <form class="comment-form">
@@ -230,30 +243,37 @@
         }
       });
       sections[article.category].appendChild(newsItem);
+
       // Add to past news
       const pastNewsSection = document.querySelector('[data-section="past"]');
       const pastNewsItem = newsItem.cloneNode(true);
       pastNewsItem.querySelector('.comment-form button').onclick = function() { submitComment(this); };
-      pastNewsItem.querySelectorAll('.button')[0].onclick = function() { zoomToImage(article.location); };
+      pastNewsItem.querySelectorAll('.button')[0].onclick = function() { zoomToImage(article.location, article.content); };
       pastNewsItem.querySelectorAll('.button')[1].onclick = function() { showFullContent(article.content); };
       pastNewsSection.appendChild(pastNewsItem);
     });
-    function zoomToImage(location) {
+
+    function zoomToImage(location, content) {
       map.flyTo({
         center: location,
         zoom: 15,
         essential: true
       });
       document.getElementById('map').style.display = 'block';
+      document.getElementById('satellite-content').style.display = 'block';
+      document.getElementById('satellite-content').innerText = content;
       showSection('satellite');
     }
+
     function showFullContent(content) {
       alert(content); // Change this to a more sophisticated modal if needed
     }
+
     function showSection(section) {
       document.querySelectorAll('[data-section]').forEach(el => el.style.display = 'none');
       document.querySelector(`[data-section="${section}"]`).style.display = 'block';
     }
+
     function submitComment(button) {
       const commentForm = button.closest('.comment-form');
       const name = commentForm.querySelector('input').value.trim();
@@ -267,6 +287,7 @@
       commentForm.querySelector('input').value = '';
       commentForm.querySelector('textarea').value = '';
     }
+
     function spinGlobe() {
       const secondsPerRevolution = 120;
       const maxSpinDuration = 20000; // in milliseconds
