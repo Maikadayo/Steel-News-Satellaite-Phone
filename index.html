@@ -11,8 +11,10 @@
       margin: 0;
       padding: 0;
       font-family: 'Arial', sans-serif;
+      background: url('https://api.mapbox.com/styles/v1/mapbox/satellite-v9/static/0,0,1/800x600?access_token=pk.eyJ1IjoiaGFydWNoYW5uIiwiYSI6ImNsdnFlZWRidTAyNmkya21yem1wMjhzZHUifQ.GrEXJlVvv0ljdkQXoEQTTQ') no-repeat center center fixed;
+      background-size: cover;
     }
-    #header {
+    #header, #footer {
       width: 100%;
       padding: 10px;
       background: #333;
@@ -20,10 +22,26 @@
       text-align: center;
       font-size: 24px;
     }
+    #footer {
+      position: fixed;
+      bottom: 0;
+    }
+    #menu {
+      width: 100%;
+      padding: 10px 0;
+      background: #555;
+      color: #fff;
+      text-align: center;
+    }
+    #menu a {
+      margin: 0 10px;
+      color: #fff;
+      text-decoration: none;
+    }
     #container {
       display: flex;
       flex-direction: column;
-      height: calc(100% - 50px); /* Adjusted for header height */
+      height: calc(100% - 100px); /* Adjusted for header and footer height */
       overflow: hidden;
       position: relative;
     }
@@ -50,6 +68,12 @@
     }
     .news-item:hover {
       background-color: #eee;
+    }
+    .news-content-small {
+      font-size: 12px;
+      color: #666;
+      display: block;
+      margin-top: 5px;
     }
     .news-content {
       display: none;
@@ -105,8 +129,13 @@
 </head>
 <body>
   <div id="header">Today’s Steel News</div>
+  <div id="menu">
+    <a href="#" onclick="showSection('today')">Today's News</a>
+    <a href="#" onclick="showSection('past')">Past News</a>
+    <a href="#" onclick="showSection('satellite')">Satellite Image</a>
+  </div>
   <div id="container">
-    <div id="news-sections">
+    <div id="news-sections" data-section="today">
       <div class="section" id="produce">
         <div class="section-title">Produce</div>
       </div>
@@ -120,6 +149,10 @@
         <div class="section-title">Other</div>
       </div>
     </div>
+    <div id="news-sections" data-section="past" style="display: none;">
+      <div class="section-title">Past News</div>
+      <!-- Past news will be dynamically populated here -->
+    </div>
     <div id="map"></div>
     <div id="comment-section">
       <form id="comment-form">
@@ -129,6 +162,7 @@
       <div id="comments"></div>
     </div>
   </div>
+  <div id="footer">© 2024 Steel News Satellite</div>
 
   <script src='https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.js'></script>
   <script>
@@ -174,11 +208,10 @@
     newsArticles.forEach(article => {
       const newsItem = document.createElement('div');
       newsItem.className = 'news-item';
-      newsItem.innerText = article.title;
+      newsItem.innerHTML = `${article.title}<span class="news-content-small">${article.content}</span>`;
       const contentDiv = document.createElement('div');
       contentDiv.className = 'news-content';
       contentDiv.innerHTML = `
-        <p>${article.content}</p>
         <button class="button" onclick="zoomToImage(${article.location})">Detail Image</button>
         <button class="button" onclick="showFullContent('${article.content}')">Detail Content</button>
         <button class="button" onclick="showComments()">Comment</button>
@@ -188,6 +221,10 @@
         contentDiv.style.display = contentDiv.style.display === 'none' ? 'block' : 'none';
       });
       sections[article.category].appendChild(newsItem);
+
+      // Add to past news
+      const pastNewsSection = document.querySelector('[data-section="past"]');
+      pastNewsSection.appendChild(newsItem.cloneNode(true));
     });
 
     function zoomToImage(location) {
@@ -207,6 +244,11 @@
       document.getElementById('comment-section').scrollIntoView({ behavior: 'smooth' });
     }
 
+    function showSection(section) {
+      document.querySelectorAll('[data-section]').forEach(el => el.style.display = 'none');
+      document.querySelector(`[data-section="${section}"]`).style.display = 'block';
+    }
+
     document.getElementById('comment-form').addEventListener('submit', function(event) {
       event.preventDefault();
       const commentText = document.getElementById('comment-text').value;
@@ -220,4 +262,3 @@
   </script>
 </body>
 </html>
-
