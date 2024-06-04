@@ -13,7 +13,6 @@
       font-family: 'Arial', sans-serif;
       background: url('https://api.mapbox.com/styles/v1/mapbox/satellite-v9/static/0,0,1/800x600?access_token=pk.eyJ1IjoiaGFydWNoYW5uIiwiYSI6ImNsdnFlZWRidTAyNmkya21yem1wMjhzZHUifQ.GrEXJlVvv0ljdkQXoEQTTQ') no-repeat center center fixed;
       background-size: cover;
-      filter: brightness(0.5);
     }
     #header, #footer {
       width: 100%;
@@ -57,7 +56,7 @@
     .section-title {
       font-size: 18px;
       margin-bottom: 10px;
-      color: #fff;
+      color: #444;
     }
     .news-item {
       padding: 10px;
@@ -93,25 +92,25 @@
       border: none;
       border-radius: 5px;
     }
-    #map, #satellite-map {
+    #map {
       width: 100%;
       height: 300px;
       display: none;
     }
-    #comment-section {
+    .comment-section {
       margin-top: 20px;
     }
-    #comment-form {
+    .comment-form {
       display: flex;
       flex-direction: column;
     }
-    #comment-form textarea {
+    .comment-form textarea {
       padding: 10px;
       margin-bottom: 10px;
       border: 1px solid #ddd;
       border-radius: 5px;
     }
-    #comment-form button {
+    .comment-form button {
       padding: 10px;
       background-color: #333;
       color: #fff;
@@ -119,7 +118,7 @@
       border-radius: 5px;
       cursor: pointer;
     }
-    #comments {
+    .comments {
       margin-top: 20px;
     }
     .comment {
@@ -154,15 +153,7 @@
       <div class="section-title">Past News</div>
       <!-- Past news will be dynamically populated here -->
     </div>
-    <div id="satellite-map" data-section="satellite" style="display: none;"></div>
     <div id="map"></div>
-    <div id="comment-section">
-      <form id="comment-form">
-        <textarea id="comment-text" rows="4" placeholder="Write your comment..."></textarea>
-        <button type="submit">Submit</button>
-      </form>
-      <div id="comments"></div>
-    </div>
   </div>
   <div id="footer">© 2024 Steel News Satellite</div>
 
@@ -178,23 +169,9 @@
       bearing: 0 // bearing in degrees
     });
 
-    const satelliteMap = new mapboxgl.Map({
-      container: 'satellite-map', // container ID
-      style: 'mapbox://styles/mapbox/satellite-v9', // style URL
-      center: [31.261181743597245,30.033253480264698], // initial center coordinates
-      zoom: 1.9, // initial zoom
-      pitch: 0, // pitch in degrees
-      bearing: 0 // bearing in degrees
-    });
-
     map.addControl(new mapboxgl.NavigationControl());
     map.on('style.load', () => {
       map.setFog({}); // Set the default atmosphere style
-    });
-
-    satelliteMap.addControl(new mapboxgl.NavigationControl());
-    satelliteMap.on('style.load', () => {
-      satelliteMap.setFog({}); // Set the default atmosphere style
     });
 
     const newsArticles = [
@@ -230,7 +207,13 @@
       contentDiv.innerHTML = `
         <button class="button" onclick="zoomToImage(${article.location})">Detail Image</button>
         <button class="button" onclick="showFullContent('${article.content}')">Detail Content</button>
-        <button class="button" onclick="showComments()">Comment</button>
+        <div class="comment-section">
+          <form class="comment-form">
+            <textarea rows="2" placeholder="Write your comment..."></textarea>
+            <button type="button" onclick="submitComment(this)">Submit</button>
+          </form>
+          <div class="comments"></div>
+        </div>
       `;
       newsItem.appendChild(contentDiv);
       newsItem.addEventListener('click', () => {
@@ -244,12 +227,12 @@
     });
 
     function zoomToImage(location) {
-      showSection('satellite');
-      satelliteMap.flyTo({
+      map.flyTo({
         center: location,
         zoom: 15,
         essential: true
       });
+      document.getElementById('map').style.display = 'block';
     }
 
     function showFullContent(content) {
@@ -263,52 +246,19 @@
     function showSection(section) {
       document.querySelectorAll('[data-section]').forEach(el => el.style.display = 'none');
       document.querySelector(`[data-section="${section}"]`).style.display = 'block';
-      if (section === 'satellite') {
-        satelliteMap.resize();
-      }
     }
 
-    document.getElementById('comment-form').addEventListener('submit', function(event) {
-      event.preventDefault();
-      const commentText = document.getElementById('comment-text').value;
+    function submitComment(button) {
+      const commentForm = button.closest('.comment-form');
+      const commentText = commentForm.querySelector('textarea').value;
       if (commentText.trim() === '') return;
       const comment = document.createElement('div');
       comment.className = 'comment';
       comment.innerText = commentText;
-      document.getElementById('comments').appendChild(comment);
-      document.getElementById('comment-text').value = '';
-    });
-
-    // Globe spinning logic
-    const secondsPerRevolution = 240;
-    let userInteracting = false;
-    let spinEnabled = true;
-
-    function spinGlobe() {
-        if (spinEnabled && !userInteracting) {
-            let distancePerSecond = 360 / secondsPerRevolution;
-            const center = satelliteMap.getCenter();
-            center.lng -= distancePerSecond;
-            satelliteMap.easeTo({ center, duration: 1000, easing: (n) => n });
-        }
+      const commentsSection = commentForm.nextElementSibling;
+      commentsSection.appendChild(comment);
+      commentForm.querySelector('textarea').value = '';
     }
-
-    satelliteMap.on('mousedown', () => {
-        userInteracting = true;
-        spinEnabled = false; // Stop spinning when map is clicked or interacted with
-    });
-
-    satelliteMap.on('mouseup', () => {
-        userInteracting = false;
-    });
-
-    satelliteMap.on('moveend', () => {
-        if (!userInteracting) {
-            spinGlobe(); // Resume spinning only if user interaction flag is reset
-        }
-    });
-
-    spinGlobe();
   </script>
 </body>
 </html>
