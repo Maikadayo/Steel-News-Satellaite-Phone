@@ -259,9 +259,13 @@
         zoom: 15,
         essential: true
       });
-      document.getElementById('map').style.display = 'block';
-      document.getElementById('satellite-content').style.display = 'block';
-      document.getElementById('satellite-content').innerText = content;
+
+      map.once('moveend', () => {
+        document.getElementById('map').style.display = 'block';
+        document.getElementById('satellite-content').style.display = 'block';
+        document.getElementById('satellite-content').innerText = content;
+      });
+
       showSection('satellite');
     }
 
@@ -272,6 +276,10 @@
     function showSection(section) {
       document.querySelectorAll('[data-section]').forEach(el => el.style.display = 'none');
       document.querySelector(`[data-section="${section}"]`).style.display = 'block';
+
+      if (section !== 'satellite') {
+        document.getElementById('satellite-content').style.display = 'none';
+      }
     }
 
     function submitComment(button) {
