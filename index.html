@@ -244,12 +244,12 @@
     });
 
     function zoomToImage(location) {
-      map.flyTo({
+      showSection('satellite');
+      satelliteMap.flyTo({
         center: location,
         zoom: 15,
         essential: true
       });
-      document.getElementById('map').style.display = 'block';
     }
 
     function showFullContent(content) {
@@ -278,6 +278,37 @@
       document.getElementById('comments').appendChild(comment);
       document.getElementById('comment-text').value = '';
     });
+
+    // Globe spinning logic
+    const secondsPerRevolution = 240;
+    let userInteracting = false;
+    let spinEnabled = true;
+
+    function spinGlobe() {
+        if (spinEnabled && !userInteracting) {
+            let distancePerSecond = 360 / secondsPerRevolution;
+            const center = satelliteMap.getCenter();
+            center.lng -= distancePerSecond;
+            satelliteMap.easeTo({ center, duration: 1000, easing: (n) => n });
+        }
+    }
+
+    satelliteMap.on('mousedown', () => {
+        userInteracting = true;
+        spinEnabled = false; // Stop spinning when map is clicked or interacted with
+    });
+
+    satelliteMap.on('mouseup', () => {
+        userInteracting = false;
+    });
+
+    satelliteMap.on('moveend', () => {
+        if (!userInteracting) {
+            spinGlobe(); // Resume spinning only if user interaction flag is reset
+        }
+    });
+
+    spinGlobe();
   </script>
 </body>
 </html>
