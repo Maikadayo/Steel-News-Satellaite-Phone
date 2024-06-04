@@ -11,7 +11,8 @@
       margin: 0;
       padding: 0;
       font-family: 'Arial', sans-serif;
-      background: url('https://api.mapbox.com/styles/v1/mapbox/satellite-v9/static/0,0,1/800x600?access_token=pk.eyJ1IjoiaGFydWNoYW5uIiwiYSI6ImNsdnFlZWRidTAyNmkya21yem1wMjhzZHUifQ.GrEXJlVvv0ljdkQXoEQTTQ') no-repeat center center fixed;
+      background: rgba(0, 0, 0, 0.5) url('https://api.mapbox.com/styles/v1/mapbox/satellite-v9/static/0,0,1/800x600?access_token=pk.eyJ1IjoiaGFydWNoYW5uIiwiYSI6ImNsdnFlZWRidTAyNmkya21yem1wMjhzZHUifQ.GrEXJlVvv0ljdkQXoEQTTQ') no-repeat center center fixed;
+      background-blend-mode: darken;
       background-size: cover;
     }
     #header, #footer {
@@ -56,7 +57,7 @@
     .section-title {
       font-size: 18px;
       margin-bottom: 10px;
-      color: #444;
+      color: #fff; /* Changed to white */
     }
     .news-item {
       padding: 10px;
@@ -104,6 +105,7 @@
       display: flex;
       flex-direction: column;
     }
+    .comment-form input,
     .comment-form textarea {
       padding: 10px;
       margin-bottom: 10px;
@@ -209,6 +211,7 @@
         <button class="button" onclick="showFullContent('${article.content}')">Detail Content</button>
         <div class="comment-section">
           <form class="comment-form">
+            <input type="text" placeholder="Your name...">
             <textarea rows="2" placeholder="Write your comment..."></textarea>
             <button type="button" onclick="submitComment(this)">Submit</button>
           </form>
@@ -223,7 +226,8 @@
 
       // Add to past news
       const pastNewsSection = document.querySelector('[data-section="past"]');
-      pastNewsSection.appendChild(newsItem.cloneNode(true));
+      const pastNewsItem = newsItem.cloneNode(true);
+      pastNewsSection.appendChild(pastNewsItem);
     });
 
     function zoomToImage(location) {
@@ -251,13 +255,15 @@
 
     function submitComment(button) {
       const commentForm = button.closest('.comment-form');
-      const commentText = commentForm.querySelector('textarea').value;
-      if (commentText.trim() === '') return;
+      const name = commentForm.querySelector('input').value.trim();
+      const commentText = commentForm.querySelector('textarea').value.trim();
+      if (name === '' || commentText === '') return;
       const comment = document.createElement('div');
       comment.className = 'comment';
-      comment.innerText = commentText;
+      comment.innerHTML = `<strong>${name}:</strong> ${commentText}`;
       const commentsSection = commentForm.nextElementSibling;
       commentsSection.appendChild(comment);
+      commentForm.querySelector('input').value = '';
       commentForm.querySelector('textarea').value = '';
     }
   </script>
