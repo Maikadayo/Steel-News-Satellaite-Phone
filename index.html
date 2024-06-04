@@ -21,7 +21,7 @@
       background: #333;
       color: #fff;
       text-align: center;
-      font-size: 14px;
+      font-size: 24px;
     }
     #footer {
       position: fixed;
@@ -132,6 +132,7 @@
   </style>
 </head>
 <body>
+  <div id="header">Today’s Steel News</div>
   <div id="header">Steel News</div>
   <div id="menu">
     <a href="#" onclick="showSection('today')">Today's News</a>
@@ -160,7 +161,6 @@
     <div id="map" data-section="satellite" style="display: none;"></div>
   </div>
   <div id="footer">© 2024 Steel News Satellite</div>
-
   <script src='https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.js'></script>
   <script>
     mapboxgl.accessToken = 'pk.eyJ1IjoiaGFydWNoYW5uIiwiYSI6ImNsdnFlZWRidTAyNmkya21yem1wMjhzZHUifQ.GrEXJlVvv0ljdkQXoEQTTQ';
@@ -168,20 +168,17 @@
       container: 'map', // container ID
       style: 'mapbox://styles/mapbox/satellite-v9', // style URL
       center: [31.261181743597245,30.033253480264698], // initial center coordinates
+      zoom: 1.9, // initial zoom
       zoom: 1.0, // initial zoom
       pitch: 0, // pitch in degrees
       bearing: 0 // bearing in degrees
     });
-
     map.addControl(new mapboxgl.NavigationControl());
-
     map.on('style.load', () => {
       map.setFog({}); // Set the default atmosphere style
       spinGlobe();
     });
-
     let activeContentDiv = null;
-
     const newsArticles = [
       {
         title: "Vietnam targets higher steel output, lower emissions",
@@ -198,14 +195,12 @@
         category: "trade"
       }
     ];
-
     const sections = {
       produce: document.getElementById('produce'),
       decarbonization: document.getElementById('decarbonization'),
       trade: document.getElementById('trade'),
       other: document.getElementById('other')
     };
-
     newsArticles.forEach(article => {
       const newsItem = document.createElement('div');
       newsItem.className = 'news-item';
@@ -235,7 +230,6 @@
         }
       });
       sections[article.category].appendChild(newsItem);
-
       // Add to past news
       const pastNewsSection = document.querySelector('[data-section="past"]');
       const pastNewsItem = newsItem.cloneNode(true);
@@ -244,7 +238,6 @@
       pastNewsItem.querySelectorAll('.button')[1].onclick = function() { showFullContent(article.content); };
       pastNewsSection.appendChild(pastNewsItem);
     });
-
     function zoomToImage(location) {
       map.flyTo({
         center: location,
@@ -254,16 +247,13 @@
       document.getElementById('map').style.display = 'block';
       showSection('satellite');
     }
-
     function showFullContent(content) {
       alert(content); // Change this to a more sophisticated modal if needed
     }
-
     function showSection(section) {
       document.querySelectorAll('[data-section]').forEach(el => el.style.display = 'none');
       document.querySelector(`[data-section="${section}"]`).style.display = 'block';
     }
-
     function submitComment(button) {
       const commentForm = button.closest('.comment-form');
       const name = commentForm.querySelector('input').value.trim();
@@ -277,7 +267,6 @@
       commentForm.querySelector('input').value = '';
       commentForm.querySelector('textarea').value = '';
     }
-
     function spinGlobe() {
       const secondsPerRevolution = 120;
       const maxSpinDuration = 20000; // in milliseconds
