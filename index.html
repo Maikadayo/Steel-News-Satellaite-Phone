@@ -2,9 +2,8 @@
 <html lang="ja">
 <head>
   <meta charset="utf-8">
-  <title>Steel News Satellite</title>
+  <title>Today’s Steel News</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <!-- Include the Mapbox GL CSS -->
   <link href='https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.css' rel='stylesheet' />
   <style>
     body, html {
@@ -15,7 +14,7 @@
     }
     #header {
       width: 100%;
-      padding: 10px 0;
+      padding: 10px;
       background: #333;
       color: #fff;
       text-align: center;
@@ -23,75 +22,114 @@
     }
     #container {
       display: flex;
+      flex-direction: column;
       height: calc(100% - 50px); /* Adjusted for header height */
       overflow: hidden;
       position: relative;
     }
-    #news-list {
-      position: absolute;
-      left: -100%;
-      width: 100%;
-      height: 100%;
-      padding: 20px;
-      box-sizing: border-box;
+    #news-sections {
+      padding: 10px;
       overflow-y: auto;
-      background-color: rgba(255, 255, 255, 0.9);
-      transition: left 0.3s ease;
-      z-index: 2;
-    }
-    #map {
       flex: 1;
-      height: 100%;
-      z-index: 1;
+    }
+    .section {
+      margin-bottom: 20px;
+    }
+    .section-title {
+      font-size: 18px;
+      margin-bottom: 10px;
+      color: #444;
     }
     .news-item {
-      margin-bottom: 10px;
       padding: 10px;
       border: 1px solid #ddd;
       background-color: #fff;
+      margin-bottom: 10px;
       cursor: pointer;
       transition: background-color 0.3s ease;
     }
     .news-item:hover {
       background-color: #eee;
     }
-    .menu-button {
-      position: absolute;
-      top: 10px;
-      left: 10px;
-      padding: 10px 20px;
-      background: #333;
+    .news-content {
+      display: none;
+      padding: 10px;
+      box-sizing: border-box;
+      background-color: #ffffff;
+    }
+    .button {
+      display: inline-block;
+      padding: 5px 10px;
+      margin-top: 10px;
+      background-color: #333;
       color: #fff;
+      text-align: center;
       cursor: pointer;
-      z-index: 3;
       border: none;
       border-radius: 5px;
     }
-    .close-button {
-      position: absolute;
-      top: 10px;
-      right: 10px;
+    #map {
+      width: 100%;
+      height: 300px;
+      display: none;
+    }
+    #comment-section {
+      margin-top: 20px;
+    }
+    #comment-form {
+      display: flex;
+      flex-direction: column;
+    }
+    #comment-form textarea {
       padding: 10px;
-      background: #333;
+      margin-bottom: 10px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+    }
+    #comment-form button {
+      padding: 10px;
+      background-color: #333;
       color: #fff;
-      cursor: pointer;
-      z-index: 3;
       border: none;
       border-radius: 5px;
+      cursor: pointer;
+    }
+    #comments {
+      margin-top: 20px;
+    }
+    .comment {
+      padding: 10px;
+      border-bottom: 1px solid #ddd;
     }
   </style>
 </head>
 <body>
-  <div id="header">Steel News Satellite</div>
-  <button class="menu-button" onclick="toggleMenu()">Menu</button>
+  <div id="header">Today’s Steel News</div>
   <div id="container">
-    <div id="news-list">
-      <button class="close-button" onclick="toggleMenu()">Close</button>
-      <!-- News list will be dynamically populated here -->
+    <div id="news-sections">
+      <div class="section" id="produce">
+        <div class="section-title">Produce</div>
+      </div>
+      <div class="section" id="decarbonization">
+        <div class="section-title">Decarbonization</div>
+      </div>
+      <div class="section" id="trade">
+        <div class="section-title">Trade</div>
+      </div>
+      <div class="section" id="other">
+        <div class="section-title">Other</div>
+      </div>
     </div>
     <div id="map"></div>
+    <div id="comment-section">
+      <form id="comment-form">
+        <textarea id="comment-text" rows="4" placeholder="Write your comment..."></textarea>
+        <button type="submit">Submit</button>
+      </form>
+      <div id="comments"></div>
+    </div>
   </div>
-  <!-- Include the Mapbox GL JS -->
+
   <script src='https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.js'></script>
   <script>
     mapboxgl.accessToken = 'pk.eyJ1IjoiaGFydWNoYW5uIiwiYSI6ImNsdnFlZWRidTAyNmkya21yem1wMjhzZHUifQ.GrEXJlVvv0ljdkQXoEQTTQ';
@@ -106,7 +144,7 @@
 
     map.addControl(new mapboxgl.NavigationControl());
     map.on('style.load', () => {
-        map.setFog({}); // Set the default atmosphere style
+      map.setFog({}); // Set the default atmosphere style
     });
 
     const newsArticles = [
@@ -114,70 +152,72 @@
         title: "Vietnam targets higher steel output, lower emissions",
         date: "05/13/2024",
         content: "Vietnam could produce 51 million tonnes of crude steel in 2050, Vietnam Steel Association (VSA) secretary general and vice chairman Dinh Quoc Thai said at Monday’s South East Asian Iron and Steel Institute (Seaisi) annual conference.",
-        location: [105.8148158587074,21.01580842214596]
+        location: [105.8148158587074,21.01580842214596],
+        category: "produce"
       },
       {
         title: "ArcelorMittal Restocking Outlook",
         date: "05/03/2024",
         content: "ArcelorMittal observes a waiting period for a rebound in restocking. Sentiment stabilizes, awaiting consumption increase due to low inventory levels. Maintains global steel demand growth forecast for 2024. Q1 shows declines in production, shipments, net profit, and Ebitda, but revenue grows compared to Q4 2023. European steel spreads improve, US prices stabilize influenced by low inventory. Challenges noted from China’s excess steel production and rising exports. Focus on upcoming projects for low-emission steel supply.",
-        location: [6.143465193777926,49.62180385642374]
+        location: [6.143465193777926,49.62180385642374],
+        category: "trade"
       }
     ];
 
-    const newsList = document.getElementById('news-list');
-    let activeContentDiv = null;
+    const sections = {
+      produce: document.getElementById('produce'),
+      decarbonization: document.getElementById('decarbonization'),
+      trade: document.getElementById('trade'),
+      other: document.getElementById('other')
+    };
 
     newsArticles.forEach(article => {
       const newsItem = document.createElement('div');
       newsItem.className = 'news-item';
       newsItem.innerText = article.title;
-
       const contentDiv = document.createElement('div');
       contentDiv.className = 'news-content';
-      contentDiv.innerHTML = `<p>${article.content}</p><span class="detail-link" data-location='${JSON.stringify(article.location)}'>Detail</span>`;
-      contentDiv.style.display = 'none';
-
-      newsItem.addEventListener('click', () => {
-        map.flyTo({
-          center: article.location,
-          zoom: 10, // Initial zoom level
-          essential: true
-        });
-
-        // Hide the previously active content
-        if (activeContentDiv && activeContentDiv !== contentDiv) {
-          activeContentDiv.style.display = 'none';
-        }
-
-        // Toggle content display
-        contentDiv.style.display = contentDiv.style.display === 'none' ? 'block' : 'none';
-        activeContentDiv = contentDiv;
-
-        const detailLink = contentDiv.querySelector('.detail-link');
-        detailLink.addEventListener('click', (e) => {
-          e.stopPropagation(); // Prevent triggering the parent click event
-          map.flyTo({
-            center: article.location,
-            zoom: 15, // Maximum zoom level
-            essential: true
-          });
-        });
-
-        toggleMenu(); // Close the menu after selecting a news item
-      });
-
+      contentDiv.innerHTML = `
+        <p>${article.content}</p>
+        <button class="button" onclick="zoomToImage(${article.location})">Detail Image</button>
+        <button class="button" onclick="showFullContent('${article.content}')">Detail Content</button>
+        <button class="button" onclick="showComments()">Comment</button>
+      `;
       newsItem.appendChild(contentDiv);
-      newsList.appendChild(newsItem);
+      newsItem.addEventListener('click', () => {
+        contentDiv.style.display = contentDiv.style.display === 'none' ? 'block' : 'none';
+      });
+      sections[article.category].appendChild(newsItem);
     });
 
-    function toggleMenu() {
-      const newsList = document.getElementById('news-list');
-      if (newsList.style.left === '0px') {
-        newsList.style.left = '-100%';
-      } else {
-        newsList.style.left = '0px';
-      }
+    function zoomToImage(location) {
+      map.flyTo({
+        center: location,
+        zoom: 15,
+        essential: true
+      });
+      document.getElementById('map').style.display = 'block';
     }
+
+    function showFullContent(content) {
+      alert(content); // Change this to a more sophisticated modal if needed
+    }
+
+    function showComments() {
+      document.getElementById('comment-section').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    document.getElementById('comment-form').addEventListener('submit', function(event) {
+      event.preventDefault();
+      const commentText = document.getElementById('comment-text').value;
+      if (commentText.trim() === '') return;
+      const comment = document.createElement('div');
+      comment.className = 'comment';
+      comment.innerText = commentText;
+      document.getElementById('comments').appendChild(comment);
+      document.getElementById('comment-text').value = '';
+    });
   </script>
 </body>
 </html>
+
