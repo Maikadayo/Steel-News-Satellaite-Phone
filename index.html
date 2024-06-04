@@ -121,7 +121,9 @@
       cursor: pointer;
     }
     .comments {
-      margin-top: 20px;
+      margin-top: 10px;
+      max-height: 100px; /* Make the comment section smaller */
+      overflow-y: auto; /* Add scroll if comments overflow */
     }
     .comment {
       padding: 10px;
@@ -200,6 +202,8 @@
       other: document.getElementById('other')
     };
 
+    let activeContentDiv = null;
+
     newsArticles.forEach(article => {
       const newsItem = document.createElement('div');
       newsItem.className = 'news-item';
@@ -220,7 +224,11 @@
       `;
       newsItem.appendChild(contentDiv);
       newsItem.addEventListener('click', () => {
-        contentDiv.style.display = 'block'; // Always display the content when news item is clicked
+        if (activeContentDiv && activeContentDiv !== contentDiv) {
+          activeContentDiv.style.display = 'none';
+        }
+        contentDiv.style.display = contentDiv.style.display === 'none' ? 'block' : 'none';
+        activeContentDiv = contentDiv.style.display === 'block' ? contentDiv : null;
       });
       sections[article.category].appendChild(newsItem);
 
