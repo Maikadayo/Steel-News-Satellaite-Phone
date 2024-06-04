@@ -165,7 +165,7 @@
       <!-- Past news will be dynamically populated here -->
     </div>
     <div id="map" data-section="satellite" style="display: none;"></div>
-    <div id="satellite-content"></div> <!-- Added for content display -->
+    <div id="satellite-content" data-section="satellite-content"></div> <!-- Added for content display -->
   </div>
   <div id="footer">© 2024 Steel News Satellite</div>
 
@@ -259,17 +259,15 @@
       if (isSpinning) {
         isSpinning = false;
       }
-      
+
+      document.getElementById('map').style.display = 'block';
+      document.getElementById('satellite-content').style.display = 'block';
+      document.getElementById('satellite-content').innerText = content;
+
       map.flyTo({
         center: location,
         zoom: 15,
         essential: true
-      });
-
-      map.once('moveend', () => {
-        document.getElementById('map').style.display = 'block';
-        document.getElementById('satellite-content').style.display = 'block';
-        document.getElementById('satellite-content').innerText = content;
       });
 
       showSection('satellite');
