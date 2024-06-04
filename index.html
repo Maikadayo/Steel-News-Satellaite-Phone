@@ -220,13 +220,15 @@
       `;
       newsItem.appendChild(contentDiv);
       newsItem.addEventListener('click', () => {
-        contentDiv.style.display = contentDiv.style.display === 'none' ? 'block' : 'none';
+        contentDiv.style.display = 'block'; // Always display the content when news item is clicked
       });
       sections[article.category].appendChild(newsItem);
 
       // Add to past news
       const pastNewsSection = document.querySelector('[data-section="past"]');
       const pastNewsItem = newsItem.cloneNode(true);
+      pastNewsItem.querySelector('.comment-form button').onclick = function() { submitComment(this); };
+      pastNewsItem.querySelector('.button').onclick = function() { zoomToImage(article.location); };
       pastNewsSection.appendChild(pastNewsItem);
     });
 
