@@ -183,6 +183,8 @@
 
     map.addControl(new mapboxgl.NavigationControl());
 
+    let isSpinning = true;
+
     map.on('style.load', () => {
       map.setFog({}); // Set the default atmosphere style
       spinGlobe();
@@ -254,6 +256,10 @@
     });
 
     function zoomToImage(location, content) {
+      if (isSpinning) {
+        isSpinning = false;
+      }
+      
       map.flyTo({
         center: location,
         zoom: 15,
@@ -298,16 +304,16 @@
 
     function spinGlobe() {
       const secondsPerRevolution = 120;
-      const maxSpinDuration = 20000; // in milliseconds
-      let startTime = Date.now();
-      
+
       function rotateGlobe() {
-        const currentTime = Date.now();
-        if (currentTime - startTime < maxSpinDuration) {
-          const distancePerSecond = 360 / secondsPerRevolution;
-          const center = map.getCenter();
-          center.lng -= distancePerSecond;
-          map.easeTo({ center, duration: 1000, easing: (n) => n });
+        if (!isSpinning) return;
+
+        const distancePerSecond = 360 / secondsPerRevolution;
+        const center = map.getCenter();
+        center.lng -= distancePerSecond;
+        map.easeTo({ center, duration: 1000, easing: (n) => n });
+
+        if (isSpinning) {
           requestAnimationFrame(rotateGlobe);
         }
       }
