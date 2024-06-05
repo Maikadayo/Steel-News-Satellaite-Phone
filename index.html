@@ -226,10 +226,10 @@
         <button class="button" onclick='zoomToImage(${JSON.stringify(article.location)}, "${article.content}")'>Detail Image</button>
         <button class="button" onclick="showFullContent('${article.content}')">Detail Content</button>
         <div class="comment-section">
-          <form class="comment-form" onsubmit="submitComment(this); return false;">
-            <input type="text" placeholder="Your name...">
-            <textarea rows="2" placeholder="Write your comment..."></textarea>
-            <button type="submit">Submit</button>
+          <form class="comment-form" action="https://docs.google.com/forms/d/e/1FAIpQLSebsI8gV-NqVwDBa5zw-W-FVNxbkzsUYZVro4bG_9MhWYbxjA/formResponse" target="hidden_iframe" method="post" onsubmit="submitComment(this); return false;">
+            <input type="text" name="entry.1846923513" placeholder="Your Name..." required>
+            <textarea name="entry.839337160" rows="2" placeholder="Write your comment..." maxlength="400" required></textarea>
+            <button type="submit" class="button">Submit</button>
           </form>
           <div class="comments"></div>
         </div>
@@ -292,7 +292,7 @@
       const name = form.querySelector('input').value.trim();
       const commentText = form.querySelector('textarea').value.trim();
       if (name === '' || commentText === '') return;
-      
+
       // Google Form submission
       const formData = new FormData();
       formData.append('entry.1846923513', name); // Name field ID
@@ -318,6 +318,13 @@
       .catch(error => {
         console.error('Error submitting comment:', error);
       });
+
+      // Display comment immediately after submission
+      const comment = document.createElement('div');
+      comment.className = 'comment';
+      comment.innerHTML = `<strong>${name}:</strong> ${commentText}`;
+      const commentsSection = form.nextElementSibling;
+      commentsSection.appendChild(comment);
     }
 
     function spinGlobe() {
@@ -338,31 +345,6 @@
       rotateGlobe();
     }
   </script>
-  <form action="https://docs.google.com/forms/d/e/1FAIpQLSebsI8gV-NqVwDBa5zw-W-FVNxbkzsUYZVro4bG_9MhWYbxjA/formResponse" target="hidden_iframe" method="post" onsubmit="return validateForm()">
-    <p><input id="name" name="entry.1846923513" placeholder="Your Name..." required></p>
-    <p><textarea id="comment" name="entry.839337160" rows="2" placeholder="Write your comment..." maxlength="400" required></textarea></p>
-    <button type="submit">Submit</button>
-  </form>
-  <!-- Google Form 送信後のリダイレクトを行うための iframe -->
-  <iframe id="hidden_iframe" name="hidden_iframe" style="display:none;"></iframe>
-
-  <!-- スクリプト -->
-  <script type="text/javascript">
-    // フォームの送信後、ページをリロードする関数
-    function reloadPage() {
-      window.location.reload();
-    }
-
-    // フォームの入力が XSS 攻撃に対して安全であることを確認する関数
-    function validateForm() {
-      var name = document.getElementById("name").value;
-      var comment = document.getElementById("comment").value;
-      if (name.includes("<") || comment.includes("<")) {
-        alert("Input cannot contain '<' character.");
-        return false;
-      }
-      return true;
-    }
-  </script>
+  <iframe onload='if(submitted){window.location="";}' id="hidden_iframe" name="hidden_iframe" style="display:none;"></iframe>
 </body>
 </html>
