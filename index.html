@@ -265,7 +265,7 @@
       contentDiv.className = 'news-content';
       contentDiv.innerHTML = `
         <button class="button" onclick='zoomToImage(${JSON.stringify(article.location)}, "${article.content}")'>Detail Image</button>
-        <button class="button" onclick="showFullContent('${article.content}')">Detail Content</button>
+        <button class="button" onclick="showFullContent(\`${article.content.replace(/'/g, "\\'")}\`)">Detail Content</button>
         <div class="comment-section">
           <form class="comment-form" onsubmit="submitComment(this, '${article.title}'); return false;">
             <input type="text" placeholder="Your name..." required>
