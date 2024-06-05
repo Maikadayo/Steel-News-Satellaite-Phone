@@ -226,9 +226,9 @@
         <button class="button" onclick='zoomToImage(${JSON.stringify(article.location)}, "${article.content}")'>Detail Image</button>
         <button class="button" onclick="showFullContent('${article.content}')">Detail Content</button>
         <div class="comment-section">
-          <form class="comment-form" action="https://docs.google.com/forms/d/e/1FAIpQLSebsI8gV-NqVwDBa5zw-W-FVNxbkzsUYZVro4bG_9MhWYbxjA/formResponse" target="hidden_iframe" method="post" onsubmit="submitComment(this); return false;">
-            <input type="text" name="entry.1846923513" placeholder="Your Name..." required>
-            <textarea name="entry.839337160" rows="2" placeholder="Write your comment..." maxlength="400" required></textarea>
+          <form class="comment-form" onsubmit="submitComment(this); return false;">
+            <input type="text" placeholder="Your name..." required>
+            <textarea rows="2" placeholder="Write your comment..." required></textarea>
             <button type="submit" class="button">Submit</button>
           </form>
           <div class="comments"></div>
@@ -293,38 +293,16 @@
       const commentText = form.querySelector('textarea').value.trim();
       if (name === '' || commentText === '') return;
 
-      // Google Form submission
-      const formData = new FormData();
-      formData.append('entry.1846923513', name); // Name field ID
-      formData.append('entry.839337160', commentText); // Comment field ID
-      
-      fetch(form.action, {
-        method: 'POST',
-        body: formData,
-        mode: 'no-cors',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-      })
-      .then(response => {
-        if (response.ok) {
-          // Clear form fields after successful submission
-          form.querySelector('input').value = '';
-          form.querySelector('textarea').value = '';
-        } else {
-          console.error('Error submitting comment');
-        }
-      })
-      .catch(error => {
-        console.error('Error submitting comment:', error);
-      });
-
       // Display comment immediately after submission
       const comment = document.createElement('div');
       comment.className = 'comment';
       comment.innerHTML = `<strong>${name}:</strong> ${commentText}`;
       const commentsSection = form.nextElementSibling;
       commentsSection.appendChild(comment);
+
+      // Clear form fields after submission
+      form.querySelector('input').value = '';
+      form.querySelector('textarea').value = '';
     }
 
     function spinGlobe() {
@@ -345,6 +323,5 @@
       rotateGlobe();
     }
   </script>
-  <iframe onload='if(submitted){window.location="";}' id="hidden_iframe" name="hidden_iframe" style="display:none;"></iframe>
 </body>
 </html>
