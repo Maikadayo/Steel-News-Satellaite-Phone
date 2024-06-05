@@ -216,6 +216,29 @@
       other: document.getElementById('other')
     };
 
+    function loadComments() {
+      const commentsData = JSON.parse(localStorage.getItem('commentsData')) || {};
+      newsArticles.forEach(article => {
+        const commentsSection = document.querySelector(`.comments[data-title="${article.title}"]`);
+        const articleComments = commentsData[article.title] || [];
+        articleComments.forEach(comment => {
+          const commentDiv = document.createElement('div');
+          commentDiv.className = 'comment';
+          commentDiv.innerHTML = `<strong>${comment.name}:</strong> ${comment.text}`;
+          commentsSection.appendChild(commentDiv);
+        });
+      });
+    }
+
+    function saveComment(title, name, text) {
+      const commentsData = JSON.parse(localStorage.getItem('commentsData')) || {};
+      if (!commentsData[title]) {
+        commentsData[title] = [];
+      }
+      commentsData[title].push({ name, text });
+      localStorage.setItem('commentsData', JSON.stringify(commentsData));
+    }
+
     newsArticles.forEach(article => {
       const newsItem = document.createElement('div');
       newsItem.className = 'news-item';
@@ -226,12 +249,12 @@
         <button class="button" onclick='zoomToImage(${JSON.stringify(article.location)}, "${article.content}")'>Detail Image</button>
         <button class="button" onclick="showFullContent('${article.content}')">Detail Content</button>
         <div class="comment-section">
-          <form class="comment-form" onsubmit="submitComment(this); return false;">
+          <form class="comment-form" onsubmit="submitComment(this, '${article.title}'); return false;">
             <input type="text" placeholder="Your name..." required>
             <textarea rows="2" placeholder="Write your comment..." required></textarea>
             <button type="submit" class="button">Submit</button>
           </form>
-          <div class="comments"></div>
+          <div class="comments" data-title="${article.title}"></div>
         </div>
       `;
       newsItem.appendChild(contentDiv);
@@ -249,7 +272,7 @@
       // Add to past news
       const pastNewsSection = document.querySelector('[data-section="past"]');
       const pastNewsItem = newsItem.cloneNode(true);
-      pastNewsItem.querySelector('.comment-form').onsubmit = function() { submitComment(this); return false; };
+      pastNewsItem.querySelector('.comment-form').onsubmit = function() { submitComment(this, article.title); return false; };
       pastNewsItem.querySelectorAll('.button')[0].onclick = function() { zoomToImage(article.location, article.content); };
       pastNewsItem.querySelectorAll('.button')[1].onclick = function() { showFullContent(article.content); };
       pastNewsSection.appendChild(pastNewsItem);
@@ -288,7 +311,7 @@
       }
     }
 
-    function submitComment(form) {
+    function submitComment(form, title) {
       const name = form.querySelector('input').value.trim();
       const commentText = form.querySelector('textarea').value.trim();
       if (name === '' || commentText === '') return;
@@ -299,6 +322,9 @@
       comment.innerHTML = `<strong>${name}:</strong> ${commentText}`;
       const commentsSection = form.nextElementSibling;
       commentsSection.appendChild(comment);
+
+      // Save comment to local storage
+      saveComment(title, name, commentText);
 
       // Clear form fields after submission
       form.querySelector('input').value = '';
@@ -322,6 +348,9 @@
       }
       rotateGlobe();
     }
+
+    // Load comments from local storage when the page loads
+    document.addEventListener('DOMContentLoaded', loadComments);
   </script>
 </body>
 </html>
