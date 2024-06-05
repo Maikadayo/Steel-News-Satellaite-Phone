@@ -218,7 +218,7 @@
         content: "European steelmakers are considering hot rolled coil (HRC) price increases, but weak demand across end-use sectors and service centers is causing hesitation.The European Commission's recent decision to impose a 15% cap per origin on the other country tariff-rate quota for HRC has generated mixed reactions, with some suppliers expecting price rises due to limited imports, while others fear a market standoff similar to February.The market for coil derivatives remains weak, with limited orders from the automotive and white goods sectors. Despite stable prices, service centers are struggling financially, and the new quota cap is expected to reduce availability from third countries, potentially impacting prices and supply stability in the near future.",
         location: [4.414872867967929,50.81434198352372],
         category: "trade"
-      },
+      }
     ];
 
     const sections = {
@@ -264,7 +264,7 @@
       const contentDiv = document.createElement('div');
       contentDiv.className = 'news-content';
       contentDiv.innerHTML = `
-        <button class="button" onclick='zoomToImage(${JSON.stringify(article.location)}, "${article.content}")'>Detail Image</button>
+        <button class="button" onclick='zoomToImage(${JSON.stringify(article.location)}, \`${article.content.replace(/'/g, "\\'")}\`)'>Detail Image</button>
         <button class="button" onclick="showFullContent(\`${article.content.replace(/'/g, "\\'")}\`)">Detail Content</button>
         <div class="comment-section">
           <form class="comment-form" onsubmit="submitComment(this, '${article.title}'); return false;">
