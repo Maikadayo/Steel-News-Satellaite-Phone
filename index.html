@@ -224,13 +224,19 @@
     function loadComments() {
       const commentsData = JSON.parse(localStorage.getItem('commentsData')) || {};
       newsArticles.forEach(article => {
-        const commentsSection = document.querySelector(`.comments[data-title="${article.title}"]`);
+        const commentsSectionToday = document.querySelector(`.comments[data-title="${article.title}"]`);
+        const commentsSectionPast = document.querySelector(`.comments[data-title-past="${article.title}"]`);
         const articleComments = commentsData[article.title] || [];
         articleComments.forEach(comment => {
           const commentDiv = document.createElement('div');
           commentDiv.className = 'comment';
           commentDiv.innerHTML = `<strong>${comment.name}:</strong> ${comment.text}`;
-          commentsSection.appendChild(commentDiv);
+          if (commentsSectionToday) {
+            commentsSectionToday.appendChild(commentDiv.cloneNode(true));
+          }
+          if (commentsSectionPast) {
+            commentsSectionPast.appendChild(commentDiv.cloneNode(true));
+          }
         });
       });
     }
@@ -280,6 +286,7 @@
       pastNewsItem.querySelector('.comment-form').onsubmit = function() { submitComment(this, article.title); return false; };
       pastNewsItem.querySelectorAll('.button')[0].onclick = function() { zoomToImage(article.location, article.content); };
       pastNewsItem.querySelectorAll('.button')[1].onclick = function() { showFullContent(article.content); };
+      pastNewsItem.querySelector('.comments').setAttribute('data-title-past', article.title);
       pastNewsSection.appendChild(pastNewsItem);
     });
 
