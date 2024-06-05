@@ -226,10 +226,10 @@
         <button class="button" onclick='zoomToImage(${JSON.stringify(article.location)}, "${article.content}")'>Detail Image</button>
         <button class="button" onclick="showFullContent('${article.content}')">Detail Content</button>
         <div class="comment-section">
-          <form class="comment-form" action="https://docs.google.com/forms/d/e/1FAIpQLSebsI8gV-NqVwDBa5zw-W-FVNxbkzsUYZVro4bG_9MhWYbxjA/formResponse" target="hidden_iframe" method="post" onsubmit="return test(this.wcheck.value)">
-            <input type="text" name="entry.1846923513" placeholder="Your Name..." required>
-            <textarea name="entry.839337160" rows="2" placeholder="Write your comment..." maxlength="400" required></textarea>
-            <button type="submit" class="button">Submit</button>
+          <form class="comment-form" onsubmit="submitComment(this); return false;">
+            <input type="text" placeholder="Your name...">
+            <textarea rows="2" placeholder="Write your comment..."></textarea>
+            <button type="submit">Submit</button>
           </form>
           <div class="comments"></div>
         </div>
@@ -249,7 +249,7 @@
       // Add to past news
       const pastNewsSection = document.querySelector('[data-section="past"]');
       const pastNewsItem = newsItem.cloneNode(true);
-      pastNewsItem.querySelector('.comment-form button').onclick = function() { submitComment(this); };
+      pastNewsItem.querySelector('.comment-form').onsubmit = function() { submitComment(this); return false; };
       pastNewsItem.querySelectorAll('.button')[0].onclick = function() { zoomToImage(article.location, article.content); };
       pastNewsItem.querySelectorAll('.button')[1].onclick = function() { showFullContent(article.content); };
       pastNewsSection.appendChild(pastNewsItem);
@@ -288,18 +288,36 @@
       }
     }
 
-    function submitComment(button) {
-      const commentForm = button.closest('.comment-form');
-      const name = commentForm.querySelector('input').value.trim();
-      const commentText = commentForm.querySelector('textarea').value.trim();
+    function submitComment(form) {
+      const name = form.querySelector('input').value.trim();
+      const commentText = form.querySelector('textarea').value.trim();
       if (name === '' || commentText === '') return;
-      const comment = document.createElement('div');
-      comment.className = 'comment';
-      comment.innerHTML = `<strong>${name}:</strong> ${commentText}`;
-      const commentsSection = commentForm.nextElementSibling;
-      commentsSection.appendChild(comment);
-      commentForm.querySelector('input').value = '';
-      commentForm.querySelector('textarea').value = '';
+      
+      // Google Form submission
+      const formData = new FormData();
+      formData.append('entry.1846923513', name); // Name field ID
+      formData.append('entry.839337160', commentText); // Comment field ID
+      
+      fetch(form.action, {
+        method: 'POST',
+        body: formData,
+        mode: 'no-cors',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+      })
+      .then(response => {
+        if (response.ok) {
+          // Clear form fields after successful submission
+          form.querySelector('input').value = '';
+          form.querySelector('textarea').value = '';
+        } else {
+          console.error('Error submitting comment');
+        }
+      })
+      .catch(error => {
+        console.error('Error submitting comment:', error);
+      });
     }
 
     function spinGlobe() {
@@ -318,6 +336,32 @@
         }
       }
       rotateGlobe();
+    }
+  </script>
+  <form action="https://docs.google.com/forms/d/e/1FAIpQLSebsI8gV-NqVwDBa5zw-W-FVNxbkzsUYZVro4bG_9MhWYbxjA/formResponse" target="hidden_iframe" method="post" onsubmit="return validateForm()">
+    <p><input id="name" name="entry.1846923513" placeholder="Your Name..." required></p>
+    <p><textarea id="comment" name="entry.839337160" rows="2" placeholder="Write your comment..." maxlength="400" required></textarea></p>
+    <button type="submit">Submit</button>
+  </form>
+  <!-- Google Form 送信後のリダイレクトを行うための iframe -->
+  <iframe id="hidden_iframe" name="hidden_iframe" style="display:none;"></iframe>
+
+  <!-- スクリプト -->
+  <script type="text/javascript">
+    // フォームの送信後、ページをリロードする関数
+    function reloadPage() {
+      window.location.reload();
+    }
+
+    // フォームの入力が XSS 攻撃に対して安全であることを確認する関数
+    function validateForm() {
+      var name = document.getElementById("name").value;
+      var comment = document.getElementById("comment").value;
+      if (name.includes("<") || comment.includes("<")) {
+        alert("Input cannot contain '<' character.");
+        return false;
+      }
+      return true;
     }
   </script>
 </body>
