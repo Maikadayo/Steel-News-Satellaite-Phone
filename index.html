@@ -104,6 +104,7 @@
       overflow-y: auto;
       display: none;
       background-color: #fff;
+      box-sizing: border-box;
     }
     .comment-section {
       margin-top: 20px;
@@ -201,23 +202,26 @@
       {
         title: "Nippon vice chairman resumes USS takeover promotion tour",
         date: "05/06/2024",
-        content: "Nippon Steel's vice chairman Takahiro Mori is back in the US to advance the company's acquisition of US Steel, meeting with business leaders, politicians, and Pennsylvania community leaders.Compliance measures are being examined to close the deal, despite potential antitrust issues related to a facility Nippon co-owns with ArcelorMittal in Alabama; Mori is skeptical this will hinder the acquisition.Despite meetings with the United Steelworkers (USW), the union is not in favor of the acquisition; Mori believes the process will proceed more smoothly after the US presidential election.",
+        content: "Nippon Steel's vice chairman Takahiro Mori is back in the US to advance the company's acquisition of US Steel, meeting with business leaders, politicians, and Pennsylvania community leaders. Compliance measures are being examined to close the deal, despite potential antitrust issues related to a facility Nippon co-owns with ArcelorMittal in Alabama; Mori is skeptical this will hinder the acquisition. Despite meetings with the United Steelworkers (USW), the union is not in favor of the acquisition; Mori believes the process will proceed more smoothly after the US presidential election.",
         location: [139.77690649345675,35.678302229785736],
-        category: "other"
+        category: "other",
+        copyOfNews: "Emirates Steel Arkan (ESA) has signed a memorandum of understanding with China’s Delong Steel Group for a new project to construct and operate a facility producing low-carbon emission raw materials for steelmaking, ESA chief executive Saeed Ghumran Al Remeithi says in a LinkedIn post. The CEO was part of the UAE delegation during the visit of UAE President Sheikh Mohamed bin Zayed Al Nahyan to China last week. ESA declined to provide further comment when contacted by Kallanish on Friday. The firm aims to increase its steelmaking capacity to 8 million tonnes/year and embark “on a massive international collaboration” to build a 15m t/y direct reduced iron hub in Abu Dhabi, chief project officer Hassan Shashaa said at the Danieli “Innovaction” Meeting in Udine last week (see separate story). The first phase of the project, to be announced in June, involves building a 7m t/y iron ore pelletising plant and a 2.5m t/y hot-briquetted iron facility, which will supply HBI to Japan. Emirates Steel signed an agreement to this purpose with Itochu Corporation and JFE Steel last year."
       },
       {
         title: "US rebar pricing weakens, sources blame borrowing costs",
         date: "05/06/2024",
-        content: "US domestic rebar prices have dropped to $790-800/short ton from $790-810/short ton last week due to persistently high interest rates limiting bank approvals for nonresidential construction projects.Market participants report weak demand, high inventories, and aggressive pricing strategies by domestic mills contributing to the price decline. Private sector construction projects are inconsistent, and financing challenges are exacerbating the situation.The rebar market is also impacted by falling ferrous scrap prices, with an expected decline of $15-30/gross ton for June. Market sentiment suggests the rebar downtrend may persist through 2024, with potential improvement not anticipated until spring 2025.",
+        content: "US domestic rebar prices have dropped to $790-800/short ton from $790-810/short ton last week due to persistently high interest rates limiting bank approvals for nonresidential construction projects. Market participants report weak demand, high inventories, and aggressive pricing strategies by domestic mills contributing to the price decline. Private sector construction projects are inconsistent, and financing challenges are exacerbating the situation. The rebar market is also impacted by falling ferrous scrap prices, with an expected decline of $15-30/gross ton for June. Market sentiment suggests the rebar downtrend may persist through 2024, with potential improvement not anticipated until spring 2025.",
         location: [-77.04272846590575,38.92634689081075],
-        category: "trade"
+        category: "trade",
+        copyOfNews: "US domestic rebar prices have dropped to $790-800/short ton from $790-810/short ton last week due to persistently high interest rates limiting bank approvals for nonresidential construction projects. Market participants report weak demand, high inventories, and aggressive pricing strategies by domestic mills contributing to the price decline. Private sector construction projects are inconsistent, and financing challenges are exacerbating the situation. The rebar market is also impacted by falling ferrous scrap prices, with an expected decline of $15-30/gross ton for June. Market sentiment suggests the rebar downtrend may persist through 2024, with potential improvement not anticipated until spring 2025."
       },
       {
         title: "Low EU consumption discourages coil price increases",
         date: "05/06/2024",
-        content: "European steelmakers are considering hot rolled coil (HRC) price increases, but weak demand across end-use sectors and service centers is causing hesitation.The European Commission's recent decision to impose a 15% cap per origin on the other country tariff-rate quota for HRC has generated mixed reactions, with some suppliers expecting price rises due to limited imports, while others fear a market standoff similar to February.The market for coil derivatives remains weak, with limited orders from the automotive and white goods sectors. Despite stable prices, service centers are struggling financially, and the new quota cap is expected to reduce availability from third countries, potentially impacting prices and supply stability in the near future.",
+        content: "European steelmakers are considering hot rolled coil (HRC) price increases, but weak demand across end-use sectors and service centers is causing hesitation. The European Commission's recent decision to impose a 15% cap per origin on the other country tariff-rate quota for HRC has generated mixed reactions, with some suppliers expecting price rises due to limited imports, while others fear a market standoff similar to February. The market for coil derivatives remains weak, with limited orders from the automotive and white goods sectors. Despite stable prices, service centers are struggling financially, and the new quota cap is expected to reduce availability from third countries, potentially impacting prices and supply stability in the near future.",
         location: [4.414872867967929,50.81434198352372],
-        category: "trade"
+        category: "trade",
+        copyOfNews: "European steelmakers are considering hot rolled coil (HRC) price increases, but weak demand across end-use sectors and service centers is causing hesitation. The European Commission's recent decision to impose a 15% cap per origin on the other country tariff-rate quota for HRC has generated mixed reactions, with some suppliers expecting price rises due to limited imports, while others fear a market standoff similar to February. The market for coil derivatives remains weak, with limited orders from the automotive and white goods sectors. Despite stable prices, service centers are struggling financially, and the new quota cap is expected to reduce availability from third countries, potentially impacting prices and supply stability in the near future."
       },
     ];
 
@@ -231,9 +235,10 @@
     function loadComments() {
       const commentsData = JSON.parse(localStorage.getItem('commentsData')) || {};
       newsArticles.forEach(article => {
-        const commentsSectionToday = document.querySelector(`.comments[data-title="${article.title}"]`);
-        const commentsSectionPast = document.querySelector(`.comments[data-title-past="${article.title}"]`);
-        const articleComments = commentsData[article.title] || [];
+        const key = `${article.title}-${article.content}`;
+        const commentsSectionToday = document.querySelector(`.comments[data-key="${key}"]`);
+        const commentsSectionPast = document.querySelector(`.comments[data-key-past="${key}"]`);
+        const articleComments = commentsData[key] || [];
         articleComments.forEach(comment => {
           const commentDiv = document.createElement('div');
           commentDiv.className = 'comment';
@@ -248,31 +253,32 @@
       });
     }
 
-    function saveComment(title, name, text) {
+    function saveComment(key, name, text) {
       const commentsData = JSON.parse(localStorage.getItem('commentsData')) || {};
-      if (!commentsData[title]) {
-        commentsData[title] = [];
+      if (!commentsData[key]) {
+        commentsData[key] = [];
       }
-      commentsData[title].push({ name, text });
+      commentsData[key].push({ name, text });
       localStorage.setItem('commentsData', JSON.stringify(commentsData));
     }
 
     newsArticles.forEach(article => {
+      const key = `${article.title}-${article.content}`;
       const newsItem = document.createElement('div');
       newsItem.className = 'news-item';
       newsItem.innerHTML = `${article.title}<span class="news-content-small">${article.content}</span>`;
       const contentDiv = document.createElement('div');
       contentDiv.className = 'news-content';
       contentDiv.innerHTML = `
-        <button class="button" onclick='zoomToImage(${JSON.stringify(article.location)}, \`${article.content.replace(/'/g, "\\'")}\`)'>Detail Image</button>
-        <button class="button" onclick="showFullContent(\`${article.content.replace(/'/g, "\\'")}\`)">Detail Content</button>
+        <button class="button detail-image-btn" data-location='${JSON.stringify(article.location)}' data-content='${article.copyOfNews.replace(/'/g, "\\'")}'>Detail Image</button>
+        <div class="full-article-content" style="display:none;">${article.copyOfNews}</div>
         <div class="comment-section">
-          <form class="comment-form" onsubmit="submitComment(this, '${article.title}'); return false;">
+          <form class="comment-form" onsubmit="submitComment(this, '${key}'); return false;">
             <input type="text" placeholder="Your name..." required>
             <textarea rows="2" placeholder="Write your comment..." required></textarea>
             <button type="submit" class="button">Submit</button>
           </form>
-          <div class="comments" data-title="${article.title}"></div>
+          <div class="comments" data-key="${key}"></div>
         </div>
       `;
       newsItem.appendChild(contentDiv);
@@ -289,19 +295,49 @@
 
       // Add to past news
       const pastNewsSection = document.querySelector('[data-section="past"]');
-      const pastNewsItem = newsItem.cloneNode(true);
-      pastNewsItem.querySelector('.comment-form').onsubmit = function() { submitComment(this, article.title); return false; };
-      pastNewsItem.querySelectorAll('.button')[0].onclick = function() { zoomToImage(article.location, article.content); };
-      pastNewsItem.querySelectorAll('.button')[1].onclick = function() { showFullContent(article.content); };
-      pastNewsItem.querySelector('.comments').setAttribute('data-title-past', article.title);
+      const pastNewsItem = document.createElement('div');
+      pastNewsItem.className = 'news-item';
+      pastNewsItem.innerHTML = `${article.title}<span class="news-content-small">${article.content}</span>`;
+      const pastContentDiv = document.createElement('div');
+      pastContentDiv.className = 'news-content';
+      pastContentDiv.innerHTML = `
+        <button class="button detail-image-btn" data-location='${JSON.stringify(article.location)}' data-content='${article.copyOfNews.replace(/'/g, "\\'")}'>Detail Image</button>
+        <div class="full-article-content" style="display:none;">${article.copyOfNews}</div>
+        <div class="comment-section">
+          <form class="comment-form" onsubmit="submitComment(this, '${key}'); return false;">
+            <input type="text" placeholder="Your name..." required>
+            <textarea rows="2" placeholder="Write your comment..." required></textarea>
+            <button type="submit" class="button">Submit</button>
+          </form>
+          <div class="comments" data-key-past="${key}"></div>
+        </div>
+      `;
+      pastNewsItem.appendChild(pastContentDiv);
+      pastNewsItem.addEventListener('click', (event) => {
+        if (!event.target.closest('.news-content')) {
+          if (activeContentDiv && activeContentDiv !== pastContentDiv) {
+            activeContentDiv.style.display = 'none';
+          }
+          pastContentDiv.style.display = pastContentDiv.style.display === 'none' ? 'block' : 'none';
+          activeContentDiv = pastContentDiv.style.display === 'block' ? pastContentDiv : null;
+        }
+      });
       pastNewsSection.appendChild(pastNewsItem);
+    });
+
+    document.querySelectorAll('.detail-image-btn').forEach(button => {
+      button.addEventListener('click', (event) => {
+        const location = JSON.parse(event.target.getAttribute('data-location'));
+        const content = event.target.getAttribute('data-content');
+        zoomToImage(location, content);
+      });
     });
 
     function zoomToImage(location, content) {
       if (isSpinning) {
         isSpinning = false;
       }
-      
+
       map.flyTo({
         center: location,
         zoom: 15,
@@ -311,7 +347,7 @@
       map.once('moveend', () => {
         document.getElementById('map').style.display = 'block';
         document.getElementById('satellite-content').style.display = 'block';
-        document.getElementById('satellite-content').innerText = content;
+        document.getElementById('satellite-content').innerHTML = content;
       });
 
       showSection('satellite');
@@ -330,7 +366,7 @@
       }
     }
 
-    function submitComment(form, title) {
+    function submitComment(form, key) {
       const name = form.querySelector('input').value.trim();
       const commentText = form.querySelector('textarea').value.trim();
       if (name === '' || commentText === '') return;
@@ -343,7 +379,7 @@
       commentsSection.appendChild(comment);
 
       // Save comment to local storage
-      saveComment(title, name, commentText);
+      saveComment(key, name, commentText);
 
       // Clear form fields after submission
       form.querySelector('input').value = '';
