@@ -289,11 +289,33 @@
 
       // Add to past news
       const pastNewsSection = document.querySelector('[data-section="past"]');
-      const pastNewsItem = newsItem.cloneNode(true);
-      pastNewsItem.querySelector('.comment-form').onsubmit = function() { submitComment(this, article.title); return false; };
-      pastNewsItem.querySelectorAll('.button')[0].onclick = function() { zoomToImage(article.location, article.content); };
-      pastNewsItem.querySelectorAll('.button')[1].onclick = function() { showFullContent(article.content); };
-      pastNewsItem.querySelector('.comments').setAttribute('data-title-past', article.title);
+      const pastNewsItem = document.createElement('div');
+      pastNewsItem.className = 'news-item';
+      pastNewsItem.innerHTML = `${article.title}<span class="news-content-small">${article.content}</span>`;
+      const pastContentDiv = document.createElement('div');
+      pastContentDiv.className = 'news-content';
+      pastContentDiv.innerHTML = `
+        <button class="button" onclick='zoomToImage(${JSON.stringify(article.location)}, \`${article.content.replace(/'/g, "\\'")}\`)'>Detail Image</button>
+        <button class="button" onclick="showFullContent(\`${article.content.replace(/'/g, "\\'")}\`)">Detail Content</button>
+        <div class="comment-section">
+          <form class="comment-form" onsubmit="submitComment(this, '${article.title}'); return false;">
+            <input type="text" placeholder="Your name..." required>
+            <textarea rows="2" placeholder="Write your comment..." required></textarea>
+            <button type="submit" class="button">Submit</button>
+          </form>
+          <div class="comments" data-title-past="${article.title}"></div>
+        </div>
+      `;
+      pastNewsItem.appendChild(pastContentDiv);
+      pastNewsItem.addEventListener('click', (event) => {
+        if (!event.target.closest('.news-content')) {
+          if (activeContentDiv && activeContentDiv !== pastContentDiv) {
+            activeContentDiv.style.display = 'none';
+          }
+          pastContentDiv.style.display = pastContentDiv.style.display === 'none' ? 'block' : 'none';
+          activeContentDiv = pastContentDiv.style.display === 'block' ? pastContentDiv : null;
+        }
+      });
       pastNewsSection.appendChild(pastNewsItem);
     });
 
