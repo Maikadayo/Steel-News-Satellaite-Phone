@@ -104,7 +104,6 @@
       overflow-y: auto;
       display: none;
       background-color: #fff;
-      box-sizing: border-box;
     }
     .comment-section {
       margin-top: 20px;
@@ -202,22 +201,21 @@
       {
         title: "Nippon vice chairman resumes USS takeover promotion tour",
         date: "05/06/2024",
-        content: "Nippon Steel's vice chairman Takahiro Mori is back in the US to advance the company's acquisition of US Steel, meeting with business leaders, politicians, and Pennsylvania community leaders. Compliance measures are being examined to close the deal, despite potential antitrust issues related to a facility Nippon co-owns with ArcelorMittal in Alabama; Mori is skeptical this will hinder the acquisition. Despite meetings with the United Steelworkers (USW), the union is not in favor of the acquisition; Mori believes the process will proceed more smoothly after the US presidential election.",
+        content: "Nippon Steel's vice chairman Takahiro Mori is back in the US to advance the company's acquisition of US Steel, meeting with business leaders, politicians, and Pennsylvania community leaders.Compliance measures are being examined to close the deal, despite potential antitrust issues related to a facility Nippon co-owns with ArcelorMittal in Alabama; Mori is skeptical this will hinder the acquisition.Despite meetings with the United Steelworkers (USW), the union is not in favor of the acquisition; Mori believes the process will proceed more smoothly after the US presidential election.",
         location: [139.77690649345675,35.678302229785736],
-        category: "other",
-        copyOfNews: "Emirates Steel Arkan (ESA) has signed a memorandum of understanding with China’s Delong Steel Group for a new project to construct and operate a facility producing low-carbon emission raw materials for steelmaking, ESA chief executive Saeed Ghumran Al Remeithi says in a linkedin post. The ceo was part of the UAE delegation during the visit of UAE President Sheikh Mohamed bin Zayed Al Nahyan to China last week. ESA declined to provide further comment when contacted by Kallanish on Friday. The firm aims to increase its steelmaking capacity to 8 million tonnes/year and embark “on a massive international collaboration” to build a 15m t/y direct reduced iron hub in Abu Dhabi, chief project officer Hassan Shashaa said at the Danieli “Innovaction” Meeting in Udine last week (see separate story). The first phase of the project, to be announced in June, involves building a 7m t/y iron ore pelletising plant and a 2.5m t/y hot-briquetted iron facility, which will supply HBI to Japan. Emirates Steel signed an agreement to this purpose with Itochu Corporation and JFE Steel last year."
+        category: "other"
       },
       {
         title: "US rebar pricing weakens, sources blame borrowing costs",
         date: "05/06/2024",
-        content: "US domestic rebar prices have dropped to $790-800/short ton from $790-810/short ton last week due to persistently high interest rates limiting bank approvals for nonresidential construction projects. Market participants report weak demand, high inventories, and aggressive pricing strategies by domestic mills contributing to the price decline. Private sector construction projects are inconsistent, and financing challenges are exacerbating the situation. The rebar market is also impacted by falling ferrous scrap prices, with an expected decline of $15-30/gross ton for June. Market sentiment suggests the rebar downtrend may persist through 2024, with potential improvement not anticipated until spring 2025.",
+        content: "US domestic rebar prices have dropped to $790-800/short ton from $790-810/short ton last week due to persistently high interest rates limiting bank approvals for nonresidential construction projects.Market participants report weak demand, high inventories, and aggressive pricing strategies by domestic mills contributing to the price decline. Private sector construction projects are inconsistent, and financing challenges are exacerbating the situation.The rebar market is also impacted by falling ferrous scrap prices, with an expected decline of $15-30/gross ton for June. Market sentiment suggests the rebar downtrend may persist through 2024, with potential improvement not anticipated until spring 2025.",
         location: [-77.04272846590575,38.92634689081075],
         category: "trade"
       },
       {
         title: "Low EU consumption discourages coil price increases",
         date: "05/06/2024",
-        content: "European steelmakers are considering hot rolled coil (HRC) price increases, but weak demand across end-use sectors and service centers is causing hesitation. The European Commission's recent decision to impose a 15% cap per origin on the other country tariff-rate quota for HRC has generated mixed reactions, with some suppliers expecting price rises due to limited imports, while others fear a market standoff similar to February. The market for coil derivatives remains weak, with limited orders from the automotive and white goods sectors. Despite stable prices, service centers are struggling financially, and the new quota cap is expected to reduce availability from third countries, potentially impacting prices and supply stability in the near future.",
+        content: "European steelmakers are considering hot rolled coil (HRC) price increases, but weak demand across end-use sectors and service centers is causing hesitation.The European Commission's recent decision to impose a 15% cap per origin on the other country tariff-rate quota for HRC has generated mixed reactions, with some suppliers expecting price rises due to limited imports, while others fear a market standoff similar to February.The market for coil derivatives remains weak, with limited orders from the automotive and white goods sectors. Despite stable prices, service centers are struggling financially, and the new quota cap is expected to reduce availability from third countries, potentially impacting prices and supply stability in the near future.",
         location: [4.414872867967929,50.81434198352372],
         category: "trade"
       },
@@ -233,16 +231,20 @@
     function loadComments() {
       const commentsData = JSON.parse(localStorage.getItem('commentsData')) || {};
       newsArticles.forEach(article => {
-        const commentsSection = document.querySelector(`.comments[data-title="${article.title}"]`);
-        if (commentsSection) {
-          const articleComments = commentsData[article.title] || [];
-          articleComments.forEach(comment => {
-            const commentDiv = document.createElement('div');
-            commentDiv.className = 'comment';
-            commentDiv.innerHTML = `<strong>${comment.name}:</strong> ${comment.text}`;
-            commentsSection.appendChild(commentDiv);
-          });
-        }
+        const commentsSectionToday = document.querySelector(`.comments[data-title="${article.title}"]`);
+        const commentsSectionPast = document.querySelector(`.comments[data-title-past="${article.title}"]`);
+        const articleComments = commentsData[article.title] || [];
+        articleComments.forEach(comment => {
+          const commentDiv = document.createElement('div');
+          commentDiv.className = 'comment';
+          commentDiv.innerHTML = `<strong>${comment.name}:</strong> ${comment.text}`;
+          if (commentsSectionToday) {
+            commentsSectionToday.appendChild(commentDiv.cloneNode(true));
+          }
+          if (commentsSectionPast) {
+            commentsSectionPast.appendChild(commentDiv.cloneNode(true));
+          }
+        });
       });
     }
 
@@ -262,100 +264,112 @@
       const contentDiv = document.createElement('div');
       contentDiv.className = 'news-content';
       contentDiv.innerHTML = `
-        <button class="button detail-image-btn" data-location='${JSON.stringify(article.location)}' data-content='${article.copyOfNews.replace(/'/g, "\\'")}'>Detail Image</button>
+        <button class="button" onclick='zoomToImage(${JSON.stringify(article.location)}, \`${article.content.replace(/'/g, "\\'")}\`)'>Detail Image</button>
+        <button class="button" onclick="showFullContent(\`${article.content.replace(/'/g, "\\'")}\`)">Detail Content</button>
         <div class="comment-section">
-          <h3>Comments</h3>
+          <form class="comment-form" onsubmit="submitComment(this, '${article.title}'); return false;">
+            <input type="text" placeholder="Your name..." required>
+            <textarea rows="2" placeholder="Write your comment..." required></textarea>
+            <button type="submit" class="button">Submit</button>
+          </form>
           <div class="comments" data-title="${article.title}"></div>
-          <div class="comment-form">
-            <input type="text" placeholder="Your name">
-            <textarea placeholder="Your comment"></textarea>
-            <button class="button submit-comment-btn" data-title="${article.title}">Submit</button>
-          </div>
         </div>
       `;
       newsItem.appendChild(contentDiv);
+      newsItem.addEventListener('click', (event) => {
+        if (!event.target.closest('.news-content')) {
+          if (activeContentDiv && activeContentDiv !== contentDiv) {
+            activeContentDiv.style.display = 'none';
+          }
+          contentDiv.style.display = contentDiv.style.display === 'none' ? 'block' : 'none';
+          activeContentDiv = contentDiv.style.display === 'block' ? contentDiv : null;
+        }
+      });
       sections[article.category].appendChild(newsItem);
+
+      // Add to past news
+      const pastNewsSection = document.querySelector('[data-section="past"]');
+      const pastNewsItem = newsItem.cloneNode(true);
+      pastNewsItem.querySelector('.comment-form').onsubmit = function() { submitComment(this, article.title); return false; };
+      pastNewsItem.querySelectorAll('.button')[0].onclick = function() { zoomToImage(article.location, article.content); };
+      pastNewsItem.querySelectorAll('.button')[1].onclick = function() { showFullContent(article.content); };
+      pastNewsItem.querySelector('.comments').setAttribute('data-title-past', article.title);
+      pastNewsSection.appendChild(pastNewsItem);
     });
 
-    function showSection(section) {
-      for (const key in sections) {
-        if (key === section) {
-          sections[key].style.display = 'block';
-        } else {
-          sections[key].style.display = 'none';
-        }
+    function zoomToImage(location, content) {
+      if (isSpinning) {
+        isSpinning = false;
       }
-      if (section === 'satellite') {
+      
+      map.flyTo({
+        center: location,
+        zoom: 15,
+        essential: true
+      });
+
+      map.once('moveend', () => {
         document.getElementById('map').style.display = 'block';
         document.getElementById('satellite-content').style.display = 'block';
-        document.getElementById('satellite-content').innerHTML = '<p>Loading satellite data...</p>';
-      } else {
-        document.getElementById('map').style.display = 'none';
+        document.getElementById('satellite-content').innerText = content;
+      });
+
+      showSection('satellite');
+    }
+
+    function showFullContent(content) {
+      alert(content); // Change this to a more sophisticated modal if needed
+    }
+
+    function showSection(section) {
+      document.querySelectorAll('[data-section]').forEach(el => el.style.display = 'none');
+      document.querySelector(`[data-section="${section}"]`).style.display = 'block';
+
+      if (section !== 'satellite') {
         document.getElementById('satellite-content').style.display = 'none';
       }
     }
 
-    function spinGlobe() {
-      map.rotateTo((map.getBearing() + 0.1) % 360, { duration: 100, easing: () => 0.1 });
-      if (isSpinning) {
-        requestAnimationFrame(spinGlobe);
-      }
+    function submitComment(form, title) {
+      const name = form.querySelector('input').value.trim();
+      const commentText = form.querySelector('textarea').value.trim();
+      if (name === '' || commentText === '') return;
+
+      // Display comment immediately after submission
+      const comment = document.createElement('div');
+      comment.className = 'comment';
+      comment.innerHTML = `<strong>${name}:</strong> ${commentText}`;
+      const commentsSection = form.nextElementSibling;
+      commentsSection.appendChild(comment);
+
+      // Save comment to local storage
+      saveComment(title, name, commentText);
+
+      // Clear form fields after submission
+      form.querySelector('input').value = '';
+      form.querySelector('textarea').value = '';
     }
 
-    document.querySelectorAll('.news-item').forEach(item => {
-      item.addEventListener('click', () => {
-        const content = item.querySelector('.news-content');
-        if (activeContentDiv && activeContentDiv !== content) {
-          activeContentDiv.style.display = 'none';
-        }
-        if (content.style.display === 'block') {
-          content.style.display = 'none';
-          activeContentDiv = null;
-        } else {
-          content.style.display = 'block';
-          activeContentDiv = content;
-        }
-      });
-    });
+    function spinGlobe() {
+      const secondsPerRevolution = 120;
 
-    document.querySelectorAll('.submit-comment-btn').forEach(button => {
-      button.addEventListener('click', () => {
-        const title = button.getAttribute('data-title');
-        const nameInput = button.parentElement.querySelector('input');
-        const commentInput = button.parentElement.querySelector('textarea');
-        const name = nameInput.value.trim();
-        const text = commentInput.value.trim();
-        if (name && text) {
-          saveComment(title, name, text);
-          const commentsSection = button.parentElement.parentElement.querySelector('.comments');
-          const commentDiv = document.createElement('div');
-          commentDiv.className = 'comment';
-          commentDiv.innerHTML = `<strong>${name}:</strong> ${text}`;
-          commentsSection.appendChild(commentDiv);
-          nameInput.value = '';
-          commentInput.value = '';
-        } else {
-          alert('Please enter your name and comment.');
+      function rotateGlobe() {
+        if (!isSpinning) return;
+
+        const distancePerSecond = 360 / secondsPerRevolution;
+        const center = map.getCenter();
+        center.lng -= distancePerSecond;
+        map.easeTo({ center, duration: 1000, easing: (n) => n });
+
+        if (isSpinning) {
+          requestAnimationFrame(rotateGlobe);
         }
-      });
-    });
+      }
+      rotateGlobe();
+    }
 
-    document.querySelectorAll('.detail-image-btn').forEach(button => {
-      button.addEventListener('click', () => {
-        const location = JSON.parse(button.getAttribute('data-location'));
-        const content = button.getAttribute('data-content');
-        map.flyTo({
-          center: location,
-          zoom: 4,
-          speed: 1.5,
-          essential: true
-        });
-        document.getElementById('satellite-content').innerHTML = `<p>${content}</p>`;
-      });
-    });
-
-    loadComments();
+    // Load comments from local storage when the page loads
+    document.addEventListener('DOMContentLoaded', loadComments);
   </script>
 </body>
 </html>
-
