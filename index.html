@@ -1,1 +1,412 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <title>Today’s Steel News</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href='https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.css' rel='stylesheet' />
+  <style>
+    body, html {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      font-family: 'Arial', sans-serif;
+      background: rgba(0, 0, 0, 0.5) url('https://api.mapbox.com/styles/v1/mapbox/satellite-v9/static/0,0,1/800x600?access_token=pk.eyJ1IjoiaGFydWNoYW5uIiwiYSI6ImNsdnFlZWRidTAyNmkya21yem1wMjhzZHUifQ.GrEXJlVvv0ljdkQXoEQTTQ') no-repeat center center fixed;
+      background-blend-mode: darken;
+      background-size: cover;
+    }
+    #header, #footer {
+      width: 100%;
+      padding: 10px;
+      background: #333;
+      color: #fff;
+      text-align: center;
+      font-size: 15px;
+    }
+    #footer {
+      position: fixed;
+      bottom: 0;
+    }
+    #menu {
+      width: 100%;
+      padding: 10px 0;
+      background: #555;
+      color: #fff;
+      text-align: center;
+    }
+    #menu a {
+      margin: 0 10px;
+      color: #fff;
+      text-decoration: none;
+    }
+    #container {
+      display: flex;
+      flex-direction: column;
+      height: calc(100% - 100px); /* Adjusted for header and footer height */
+      overflow: hidden;
+      position: relative;
+    }
+    #news-sections {
+      padding: 10px;
+      overflow-y: auto;
+      flex: 1;
+    }
+    .section {
+      margin-bottom: 20px;
+    }
+    .section-title {
+      font-size: 18px;
+      margin-bottom: 10px;
+      color: #fff; /* Changed to white */
+    }
+    .news-item {
+      padding: 10px;
+      border: 1px solid #ddd;
+      background-color: #fff;
+      margin-bottom: 10px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    .news-item:hover {
+      background-color: #eee;
+    }
+    .news-content-small {
+      font-size: 12px;
+      color: #666;
+      display: block;
+      margin-top: 5px;
+    }
+    .news-content {
+      display: none;
+      padding: 10px;
+      box-sizing: border-box;
+      background-color: #ffffff;
+    }
+    .button {
+      display: inline-block;
+      padding: 5px 10px;
+      margin-top: 10px;
+      background-color: #333;
+      color: #fff;
+      text-align: center;
+      cursor: pointer;
+      border: none;
+      border-radius: 5px;
+    }
+    #map {
+      width: 100%;
+      height: 50%; /* Adjusted height to show map and content */
+      display: none;
+    }
+    #satellite-content {
+      padding: 10px;
+      height: 50%; /* Adjusted height to show map and content */
+      overflow-y: auto;
+      display: none;
+      background-color: #fff;
+      box-sizing: border-box;
+    }
+    .comment-section {
+      margin-top: 20px;
+    }
+    .comment-form {
+      display: flex;
+      flex-direction: column;
+    }
+    .comment-form input,
+    .comment-form textarea {
+      padding: 10px;
+      margin-bottom: 10px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      font-family: 'Arial', sans-serif; /* Ensures same font-family */
+    }
+    .comment-form textarea {
+      font-size: 14px; /* Same font-size as input */
+    }
+    .comment-form button {
+      padding: 10px;
+      background-color: #333;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .comments {
+      margin-top: 10px;
+      max-height: 100px; /* Make the comment section smaller */
+      overflow-y: auto; /* Add scroll if comments overflow */
+    }
+    .comment {
+      padding: 10px;
+      border-bottom: 1px solid #ddd;
+      font-size: 14px; /* Smaller font-size for comments */
+    }
+  </style>
+</head>
+<body>
+  <div id="header">Today’s Steel News</div>
+  <div id="menu">
+    <a href="#" onclick="showSection('today')">Today's News</a>
+    <a href="#" onclick="showSection('past')">Past News</a>
+    <a href="#" onclick="showSection('satellite')">Satellite Image</a>
+  </div>
+  <div id="container">
+    <div id="news-sections" data-section="today">
+      <div class="section" id="production">
+        <div class="section-title">Production</div>
+      </div>
+      <div class="section" id="decarbonization">
+        <div class="section-title">Decarbonization</div>
+      </div>
+      <div class="section" id="trade">
+        <div class="section-title">Trade</div>
+      </div>
+      <div class="section" id="other">
+        <div class="section-title">Other</div>
+      </div>
+    </div>
+    <div id="news-sections" data-section="past" style="display: none;">
+      <div class="section-title">Past News</div>
+      <!-- Past news will be dynamically populated here -->
+    </div>
+    <div id="map" data-section="satellite" style="display: none;"></div>
+    <div id="satellite-content"></div> <!-- Added for content display -->
+  </div>
+  <div id="footer">© 2024 Steel News Satellite</div>
+
+  <script src='https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.js'></script>
+  <script>
+    mapboxgl.accessToken = 'pk.eyJ1IjoiaGFydWNoYW5uIiwiYSI6ImNsdnFlZWRidTAyNmkya21yem1wMjhzZHUifQ.GrEXJlVvv0ljdkQXoEQTTQ';
+    const map = new mapboxgl.Map({
+      container: 'map', // container ID
+      style: 'mapbox://styles/mapbox/satellite-v9', // style URL
+      center: [31.261181743597245,30.033253480264698], // initial center coordinates
+      zoom: 1.9, // initial zoom
+      pitch: 0, // pitch in degrees
+      bearing: 0 // bearing in degrees
+    });
+
+    map.addControl(new mapboxgl.NavigationControl());
+
+    let isSpinning = true;
+
+    map.on('style.load', () => {
+      map.setFog({}); // Set the default atmosphere style
+      spinGlobe();
+    });
+
+    let activeContentDiv = null;
+
+    const newsArticles = [
+      {
+        title: "Nippon vice chairman resumes USS takeover promotion tour",
+        date: "05/06/2024",
+        content: "Nippon Steel's vice chairman Takahiro Mori is back in the US to advance the company's acquisition of US Steel, meeting with business leaders, politicians, and Pennsylvania community leaders. Compliance measures are being examined to close the deal, despite potential antitrust issues related to a facility Nippon co-owns with ArcelorMittal in Alabama; Mori is skeptical this will hinder the acquisition. Despite meetings with the United Steelworkers (USW), the union is not in favor of the acquisition; Mori believes the process will proceed more smoothly after the US presidential election.",
+        location: [139.77690649345675,35.678302229785736],
+        category: "other",
+        copyOfNews: "Emirates Steel Arkan (ESA) has signed a memorandum of understanding with China’s Delong Steel Group for a new project to construct and operate a facility producing low-carbon emission raw materials for steelmaking, ESA chief executive Saeed Ghumran Al Remeithi says in a LinkedIn post. The CEO was part of the UAE delegation during the visit of UAE President Sheikh Mohamed bin Zayed Al Nahyan to China last week. ESA declined to provide further comment when contacted by Kallanish on Friday. The firm aims to increase its steelmaking capacity to 8 million tonnes/year and embark “on a massive international collaboration” to build a 15m t/y direct reduced iron hub in Abu Dhabi, chief project officer Hassan Shashaa said at the Danieli “Innovaction” Meeting in Udine last week (see separate story). The first phase of the project, to be announced in June, involves building a 7m t/y iron ore pelletising plant and a 2.5m t/y hot-briquetted iron facility, which will supply HBI to Japan. Emirates Steel signed an agreement to this purpose with Itochu Corporation and JFE Steel last year."
+      },
+      {
+        title: "US rebar pricing weakens, sources blame borrowing costs",
+        date: "05/06/2024",
+        content: "US domestic rebar prices have dropped to $790-800/short ton from $790-810/short ton last week due to persistently high interest rates limiting bank approvals for nonresidential construction projects. Market participants report weak demand, high inventories, and aggressive pricing strategies by domestic mills contributing to the price decline. Private sector construction projects are inconsistent, and financing challenges are exacerbating the situation. The rebar market is also impacted by falling ferrous scrap prices, with an expected decline of $15-30/gross ton for June. Market sentiment suggests the rebar downtrend may persist through 2024, with potential improvement not anticipated until spring 2025.",
+        location: [-77.04272846590575,38.92634689081075],
+        category: "trade",
+        copyOfNews: "US domestic rebar prices have dropped to $790-800/short ton from $790-810/short ton last week due to persistently high interest rates limiting bank approvals for nonresidential construction projects. Market participants report weak demand, high inventories, and aggressive pricing strategies by domestic mills contributing to the price decline. Private sector construction projects are inconsistent, and financing challenges are exacerbating the situation. The rebar market is also impacted by falling ferrous scrap prices, with an expected decline of $15-30/gross ton for June. Market sentiment suggests the rebar downtrend may persist through 2024, with potential improvement not anticipated until spring 2025."
+      },
+      {
+        title: "Low EU consumption discourages coil price increases",
+        date: "05/06/2024",
+        content: "European steelmakers are considering hot rolled coil (HRC) price increases, but weak demand across end-use sectors and service centers is causing hesitation. The European Commission's recent decision to impose a 15% cap per origin on the other country tariff-rate quota for HRC has generated mixed reactions, with some suppliers expecting price rises due to limited imports, while others fear a market standoff similar to February. The market for coil derivatives remains weak, with limited orders from the automotive and white goods sectors. Despite stable prices, service centers are struggling financially, and the new quota cap is expected to reduce availability from third countries, potentially impacting prices and supply stability in the near future.",
+        location: [4.414872867967929,50.81434198352372],
+        category: "trade",
+        copyOfNews: "European steelmakers are considering hot rolled coil (HRC) price increases, but weak demand across end-use sectors and service centers is causing hesitation. The European Commission's recent decision to impose a 15% cap per origin on the other country tariff-rate quota for HRC has generated mixed reactions, with some suppliers expecting price rises due to limited imports, while others fear a market standoff similar to February. The market for coil derivatives remains weak, with limited orders from the automotive and white goods sectors. Despite stable prices, service centers are struggling financially, and the new quota cap is expected to reduce availability from third countries, potentially impacting prices and supply stability in the near future."
+      },
+    ];
+
+    const sections = {
+      production: document.getElementById('production'),
+      decarbonization: document.getElementById('decarbonization'),
+      trade: document.getElementById('trade'),
+      other: document.getElementById('other')
+    };
+
+    function loadComments() {
+      const commentsData = JSON.parse(localStorage.getItem('commentsData')) || {};
+      newsArticles.forEach(article => {
+        const key = `${article.title}-${article.content}`;
+        const commentsSectionToday = document.querySelector(`.comments[data-key="${key}"]`);
+        const commentsSectionPast = document.querySelector(`.comments[data-key-past="${key}"]`);
+        const articleComments = commentsData[key] || [];
+        articleComments.forEach(comment => {
+          const commentDiv = document.createElement('div');
+          commentDiv.className = 'comment';
+          commentDiv.innerHTML = `<strong>${comment.name}:</strong> ${comment.text}`;
+          if (commentsSectionToday) {
+            commentsSectionToday.appendChild(commentDiv.cloneNode(true));
+          }
+          if (commentsSectionPast) {
+            commentsSectionPast.appendChild(commentDiv.cloneNode(true));
+          }
+        });
+      });
+    }
+
+    function saveComment(key, name, text) {
+      const commentsData = JSON.parse(localStorage.getItem('commentsData')) || {};
+      if (!commentsData[key]) {
+        commentsData[key] = [];
+      }
+      commentsData[key].push({ name, text });
+      localStorage.setItem('commentsData', JSON.stringify(commentsData));
+    }
+
+    newsArticles.forEach(article => {
+      const key = `${article.title}-${article.content}`;
+      const newsItem = document.createElement('div');
+      newsItem.className = 'news-item';
+      newsItem.innerHTML = `${article.title}<span class="news-content-small">${article.content}</span>`;
+      const contentDiv = document.createElement('div');
+      contentDiv.className = 'news-content';
+      contentDiv.innerHTML = `
+        <button class="button detail-image-btn" data-location='${JSON.stringify(article.location)}' data-content='${article.copyOfNews.replace(/'/g, "\\'")}'>Detail Image</button>
+        <div class="full-article-content" style="display:none;">${article.copyOfNews}</div>
+        <div class="comment-section">
+          <form class="comment-form" onsubmit="submitComment(this, '${key}'); return false;">
+            <input type="text" placeholder="Your name..." required>
+            <textarea rows="2" placeholder="Write your comment..." required></textarea>
+            <button type="submit" class="button">Submit</button>
+          </form>
+          <div class="comments" data-key="${key}"></div>
+        </div>
+      `;
+      newsItem.appendChild(contentDiv);
+      newsItem.addEventListener('click', (event) => {
+        if (!event.target.closest('.news-content')) {
+          if (activeContentDiv && activeContentDiv !== contentDiv) {
+            activeContentDiv.style.display = 'none';
+          }
+          contentDiv.style.display = contentDiv.style.display === 'none' ? 'block' : 'none';
+          activeContentDiv = contentDiv.style.display === 'block' ? contentDiv : null;
+        }
+      });
+      sections[article.category].appendChild(newsItem);
+
+      // Add to past news
+      const pastNewsSection = document.querySelector('[data-section="past"]');
+      const pastNewsItem = document.createElement('div');
+      pastNewsItem.className = 'news-item';
+      pastNewsItem.innerHTML = `${article.title}<span class="news-content-small">${article.content}</span>`;
+      const pastContentDiv = document.createElement('div');
+      pastContentDiv.className = 'news-content';
+      pastContentDiv.innerHTML = `
+        <button class="button detail-image-btn" data-location='${JSON.stringify(article.location)}' data-content='${article.copyOfNews.replace(/'/g, "\\'")}'>Detail Image</button>
+        <div class="full-article-content" style="display:none;">${article.copyOfNews}</div>
+        <div class="comment-section">
+          <form class="comment-form" onsubmit="submitComment(this, '${key}'); return false;">
+            <input type="text" placeholder="Your name..." required>
+            <textarea rows="2" placeholder="Write your comment..." required></textarea>
+            <button type="submit" class="button">Submit</button>
+          </form>
+          <div class="comments" data-key-past="${key}"></div>
+        </div>
+      `;
+      pastNewsItem.appendChild(pastContentDiv);
+      pastNewsItem.addEventListener('click', (event) => {
+        if (!event.target.closest('.news-content')) {
+          if (activeContentDiv && activeContentDiv !== pastContentDiv) {
+            activeContentDiv.style.display = 'none';
+          }
+          pastContentDiv.style.display = pastContentDiv.style.display === 'none' ? 'block' : 'none';
+          activeContentDiv = pastContentDiv.style.display === 'block' ? pastContentDiv : null;
+        }
+      });
+      pastNewsSection.appendChild(pastNewsItem);
+    });
+
+    document.querySelectorAll('.detail-image-btn').forEach(button => {
+      button.addEventListener('click', (event) => {
+        const location = JSON.parse(event.target.getAttribute('data-location'));
+        const content = event.target.getAttribute('data-content');
+        zoomToImage(location, content);
+      });
+    });
+
+    function zoomToImage(location, content) {
+      if (isSpinning) {
+        isSpinning = false;
+      }
+
+      map.flyTo({
+        center: location,
+        zoom: 15,
+        essential: true
+      });
+
+      map.once('moveend', () => {
+        document.getElementById('map').style.display = 'block';
+        document.getElementById('satellite-content').style.display = 'block';
+        document.getElementById('satellite-content').innerHTML = content;
+      });
+
+      showSection('satellite');
+    }
+
+    function showFullContent(content) {
+      alert(content); // Change this to a more sophisticated modal if needed
+    }
+
+    function showSection(section) {
+      document.querySelectorAll('[data-section]').forEach(el => el.style.display = 'none');
+      document.querySelector(`[data-section="${section}"]`).style.display = 'block';
+
+      if (section !== 'satellite') {
+        document.getElementById('satellite-content').style.display = 'none';
+      }
+    }
+
+    function submitComment(form, key) {
+      const name = form.querySelector('input').value.trim();
+      const commentText = form.querySelector('textarea').value.trim();
+      if (name === '' || commentText === '') return;
+
+      // Display comment immediately after submission
+      const comment = document.createElement('div');
+      comment.className = 'comment';
+      comment.innerHTML = `<strong>${name}:</strong> ${commentText}`;
+      const commentsSection = form.nextElementSibling;
+      commentsSection.appendChild(comment);
+
+      // Save comment to local storage
+      saveComment(key, name, commentText);
+
+      // Clear form fields after submission
+      form.querySelector('input').value = '';
+      form.querySelector('textarea').value = '';
+    }
+
+    function spinGlobe() {
+      const secondsPerRevolution = 120;
+
+      function rotateGlobe() {
+        if (!isSpinning) return;
+
+        const distancePerSecond = 360 / secondsPerRevolution;
+        const center = map.getCenter();
+        center.lng -= distancePerSecond;
+        map.easeTo({ center, duration: 1000, easing: (n) => n });
+
+        if (isSpinning) {
+          requestAnimationFrame(rotateGlobe);
+        }
+      }
+      rotateGlobe();
+    }
+
+    // Load comments from local storage when the page loads
+    document.addEventListener('DOMContentLoaded', loadComments);
+  </script>
+</body>
+</html>
 
