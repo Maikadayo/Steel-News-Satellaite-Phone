@@ -323,6 +323,7 @@
         const location = JSON.parse(event.target.getAttribute('data-location'));
         const content = event.target.getAttribute('data-content');
         zoomToImage(location, content);
+        showPopup(content);
       });
     });
 
@@ -372,6 +373,22 @@
       showSection('satellite');
     }
 
+    function showPopup(content) {
+      const popup = document.createElement('div');
+      popup.style.position = 'fixed';
+      popup.style.left = '50%';
+      popup.style.top = '50%';
+      popup.style.transform = 'translate(-50%, -50%)';
+      popup.style.backgroundColor = '#fff';
+      popup.style.padding = '20px';
+      popup.style.boxShadow = '0 0 10px rgba(0, 0, 0, 0.5)';
+      popup.innerHTML = `
+        <div>${content}</div>
+        <button onclick="this.parentElement.remove()">Close</button>
+      `;
+      document.body.appendChild(popup);
+    }
+
     function showSection(section) {
       document.querySelectorAll('[data-section]').forEach(el => el.style.display = 'none');
       document.querySelector(`[data-section="${section}"]`).style.display = 'block';
@@ -404,4 +421,3 @@
   </script>
 </body>
 </html>
-
