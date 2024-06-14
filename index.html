@@ -199,7 +199,7 @@
     let activeContentDiv = null;
 
     const newsArticles = [
-      {
+       {
         title: "Nippon vice chairman resumes USS takeover promotion tour",
         date: "05/06/2024",
         content: "Nippon Steel's vice chairman Takahiro Mori is back in the US to advance the company's acquisition of US Steel, meeting with business leaders, politicians, and Pennsylvania community leaders. Compliance measures are being examined to close the deal, despite potential antitrust issues related to a facility Nippon co-owns with ArcelorMittal in Alabama; Mori is skeptical this will hinder the acquisition. Despite meetings with the United Steelworkers (USW), the union is not in favor of the acquisition; Mori believes the process will proceed more smoothly after the US presidential election.",
@@ -345,12 +345,13 @@
       pastNewsSection.appendChild(pastNewsItem);
     });
 
-    document.querySelectorAll('.detail-image-btn').forEach(button => {
-      button.addEventListener('click', (event) => {
+    document.addEventListener('click', (event) => {
+      if (event.target.classList.contains('detail-image-btn')) {
         const location = JSON.parse(event.target.getAttribute('data-location'));
         const content = event.target.getAttribute('data-content');
         zoomToImage(location, content);
-      });
+        event.stopPropagation();
+      }
     });
 
     document.querySelectorAll('.comment-form').forEach(form => {
@@ -431,4 +432,3 @@
   </script>
 </body>
 </html>
-
