@@ -81,14 +81,12 @@
 
     .news-item:hover { background-color: #eee; }
 
-    /* タイトルだけクリックできるようにする */
     .news-title {
       font-weight: 700;
       cursor: pointer;
       user-select: none;
     }
 
-    /* リスト表示はタイトル + 先頭100文字だけ */
     .news-preview {
       font-size: 12px;
       color: #666;
@@ -97,7 +95,6 @@
       white-space: pre-wrap;
     }
 
-    /* クリック後に出る全文エリア */
     .news-content {
       display: none;
       padding: 10px;
@@ -120,40 +117,12 @@
       border-radius: 5px;
     }
 
-    .comment-section { margin-top: 20px; }
-
-    .comment-form { display: flex; flex-direction: column; }
-
-    .comment-form input,
-    .comment-form textarea {
+    .empty-note {
       padding: 10px;
-      margin-bottom: 10px;
+      background: rgba(255,255,255,0.9);
       border: 1px solid #ddd;
-      border-radius: 5px;
-      font-family: Arial, sans-serif;
-    }
-
-    .comment-form textarea { font-size: 14px; }
-
-    .comment-form button {
-      padding: 10px;
-      background-color: #333;
-      color: #fff;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-
-    .comments {
-      margin-top: 10px;
-      max-height: 100px;
-      overflow-y: auto;
-    }
-
-    .comment {
-      padding: 10px;
-      border-bottom: 1px solid #ddd;
-      font-size: 14px;
+      margin-bottom: 10px;
+      color: #333;
     }
   </style>
 </head>
@@ -186,7 +155,6 @@
     <!-- Past News -->
     <div id="page-past" class="page" data-section="past">
       <div class="section-title">Past News</div>
-      <!-- Past news will be dynamically populated here -->
     </div>
   </div>
 
@@ -324,10 +292,10 @@ Regarding Japan’s major iron and steel product export markets, in 2025 the cou
       },
     ];
 
-    // ===== Today / Past を日付で振り分け =====
-    // ※ご指定どおり固定日付で判定します
-    const todayList = newsArticles.filter(a => a.date === "30/01/2026");
-    const pastList  = newsArticles.filter(a => a.date !== "30/01/2026");
+ // ===== Today / Past を日付で振り分け =====
+    const TODAY_DATE = "30/01/2026";
+    const todayList = newsArticles.filter(a => a.date === TODAY_DATE);
+    const pastList  = newsArticles.filter(a => a.date !== TODAY_DATE);
 
     const sections = {
       gmk: document.getElementById("gmk"),
@@ -336,48 +304,35 @@ Regarding Japan’s major iron and steel product export markets, in 2025 the cou
       academic: document.getElementById("academic")
     };
 
-    // タイトルクリックで開いた「詳細」を1つだけにする
+    // タイトルクリックで開いた詳細を1つだけにする
     let activeContentDiv = null;
 
-    // コメント保存/復元（localStorage）
-    function loadComments() {
-      const commentsData = JSON.parse(localStorage.getItem("commentsData")) || {};
-      newsArticles.forEach((article) => {
-        const commentsToday = document.querySelector(
-          `.comments[data-title="${cssEscape(article.title)}"]`
-        );
-        const commentsPast = document.querySelector(
-          `.comments[data-title-past="${cssEscape(article.title)}"]`
-        );
-
-        const articleComments = commentsData[article.title] || [];
-        articleComments.forEach((comment) => {
-          const commentDiv = document.createElement("div");
-          commentDiv.className = "comment";
-          commentDiv.innerHTML = `<strong>${escapeHtml(comment.name)}:</strong> ${escapeHtml(comment.text)}`;
-
-          if (commentsToday) commentsToday.appendChild(commentDiv.cloneNode(true));
-          if (commentsPast) commentsPast.appendChild(commentDiv.cloneNode(true));
-        });
-      });
+    // category文字列をセクションIDに合わせる
+    function normalizeCategory(cat) {
+      const c = String(cat || "").toLowerCase().trim();
+      if (c.includes("gmk")) return "gmk";
+      if (c.includes("kallanish")) return "kallanish";
+      if (c.includes("steel") && c.includes("orbis")) return "steel_orbis";
+      if (c.includes("academic")) return "academic";
+      return "academic";
     }
 
-    function saveComment(title, name, text) {
-      const commentsData = JSON.parse(localStorage.getItem("commentsData")) || {};
-      if (!commentsData[title]) commentsData[title] = [];
-      commentsData[title].push({ name, text });
-      localStorage.setItem("commentsData", JSON.stringify(commentsData));
-    }
-
-    // 先頭100文字だけ表示（プレビュー）
     function makePreview(text, maxLen = 100) {
       const t = String(text || "").replace(/\s+/g, " ").trim();
       if (t.length <= maxLen) return t;
       return t.slice(0, maxLen) + "...";
     }
 
-    // 1記事UIを作る（タイトル＋100文字、タイトルクリックで全文表示）
-    function createNewsItem(article, mode /* "today" | "past" */) {
+    function escapeHtml(str) {
+      return String(str)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#39;");
+    }
+
+    function createNewsItem(article) {
       const wrapper = document.createElement("div");
       wrapper.className = "news-item";
 
@@ -394,27 +349,10 @@ Regarding Japan’s major iron and steel product export markets, in 2025 the cou
       contentDiv.innerHTML = `
         <div><strong>Date:</strong> ${escapeHtml(article.date)}</div>
         <div style="margin-top:8px;">${escapeHtml(article.content)}</div>
-
-        <button class="button copy-btn" data-copy="${escapeAttr(article.content)}">Copy Full Text</button>
-
-        <div class="comment-section">
-          <form class="comment-form">
-            <input type="text" placeholder="Your name..." required />
-            <textarea rows="2" placeholder="Write your comment..." required></textarea>
-            <button type="submit" class="button">Submit</button>
-          </form>
-          <div class="comments" ${
-            mode === "today"
-              ? `data-title="${escapeAttr(article.title)}"`
-              : `data-title-past="${escapeAttr(article.title)}"`
-          }></div>
-        </div>
       `;
 
-      // ★タイトルクリックで開閉（ここが要望の挙動）
-      titleEl.addEventListener("click", (event) => {
-        event.stopPropagation();
-
+      titleEl.addEventListener("click", (e) => {
+        e.stopPropagation();
         if (activeContentDiv && activeContentDiv !== contentDiv) {
           activeContentDiv.style.display = "none";
         }
@@ -423,73 +361,57 @@ Regarding Japan’s major iron and steel product export markets, in 2025 the cou
         activeContentDiv = next === "block" ? contentDiv : null;
       });
 
-      // Copy Full Text
-      contentDiv.querySelector(".copy-btn").addEventListener("click", (e) => {
-        e.stopPropagation();
-        const txt = e.currentTarget.getAttribute("data-copy") || "";
-        navigator.clipboard?.writeText(txt);
-        e.currentTarget.textContent = "Copied!";
-        setTimeout(() => (e.currentTarget.textContent = "Copy Full Text"), 900);
-      });
+      wrapper.appendChild(titleEl);
+      wrapper.appendChild(previewEl);
+      wrapper.appendChild(contentDiv);
+      return wrapper;
+    }
 
-    // ===== Today's News：今日分だけ表示（カテゴリ別）=====
-    todayList.forEach((article) => {
-      const item = createNewsItem(article, "today");
-      if (sections[article.category]) {
-        sections[article.category].appendChild(item);
+    function render() {
+      // Today
+      if (todayList.length === 0) {
+        const note = document.createElement("div");
+        note.className = "empty-note";
+        note.textContent = `Today's News が0件です（TODAY_DATE=${TODAY_DATE}）。dateを合わせると表示されます。`;
+        document.getElementById("page-today").prepend(note);
       } else {
-        sections.academic.appendChild(item);
+        todayList.forEach((article) => {
+          const key = normalizeCategory(article.category);
+          const item = createNewsItem(article);
+          sections[key].appendChild(item);
+        });
       }
-    });
 
-    // ===== Past News：過去分だけ表示 =====
-    const pastPage = document.getElementById("page-past");
-    pastList.forEach((article) => {
-      pastPage.appendChild(createNewsItem(article, "past"));
-    });
+      // Past
+      const pastPage = document.getElementById("page-past");
+      if (pastList.length === 0) {
+        const note = document.createElement("div");
+        note.className = "empty-note";
+        note.textContent = "Past News が0件です。";
+        pastPage.appendChild(note);
+      } else {
+        pastList.forEach((article) => {
+          pastPage.appendChild(createNewsItem(article));
+        });
+      }
+    }
 
     // メニュー切り替え
     document.querySelectorAll("#menu a[data-nav]").forEach((a) => {
       a.addEventListener("click", (e) => {
         e.preventDefault();
         const target = a.getAttribute("data-nav");
-        showSection(target);
+        document.querySelectorAll(".page").forEach((p) => p.classList.remove("active"));
+        document.getElementById(`page-${target}`).classList.add("active");
+
+        if (activeContentDiv) {
+          activeContentDiv.style.display = "none";
+          activeContentDiv = null;
+        }
       });
     });
 
-    function showSection(section) {
-      document.querySelectorAll(".page").forEach((p) => p.classList.remove("active"));
-      document.getElementById(`page-${section}`).classList.add("active");
-
-      // ページ切替時に開いている詳細は閉じる
-      if (activeContentDiv) {
-        activeContentDiv.style.display = "none";
-        activeContentDiv = null;
-      }
-    }
-
-    // HTMLエスケープ（簡易）
-    function escapeHtml(str) {
-      return String(str)
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#39;");
-    }
-    function escapeAttr(str) {
-      return escapeHtml(str).replaceAll("\n", " ");
-    }
-    // querySelector用（CSSエスケープ）
-    function cssEscape(str) {
-      return String(str).replaceAll('"', '\\"');
-    }
-
-    // ページロード時にコメント復元
-    document.addEventListener("DOMContentLoaded", loadComments);
+    document.addEventListener("DOMContentLoaded", render);
   </script>
 </body>
 </html>
-
-
-
