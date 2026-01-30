@@ -50,7 +50,7 @@
     #container {
       display: flex;
       flex-direction: column;
-      height: calc(100% - 100px); /* header+menu+footer想定 */
+      height: calc(100% - 100px);
       overflow: hidden;
       position: relative;
     }
@@ -61,13 +61,9 @@
       flex: 1;
       display: none;
     }
-    .page.active {
-      display: block;
-    }
+    .page.active { display: block; }
 
-    .section {
-      margin-bottom: 20px;
-    }
+    .section { margin-bottom: 20px; }
 
     .section-title {
       font-size: 18px;
@@ -80,26 +76,36 @@
       border: 1px solid #ddd;
       background-color: #fff;
       margin-bottom: 10px;
-      cursor: pointer;
       transition: background-color 0.3s ease;
     }
 
-    .news-item:hover {
-      background-color: #eee;
+    .news-item:hover { background-color: #eee; }
+
+    /* タイトルだけクリックできるようにする */
+    .news-title {
+      font-weight: 700;
+      cursor: pointer;
+      user-select: none;
     }
 
-    .news-content-small {
+    /* リスト表示はタイトル + 先頭100文字だけ */
+    .news-preview {
       font-size: 12px;
       color: #666;
       display: block;
-      margin-top: 5px;
+      margin-top: 6px;
+      white-space: pre-wrap;
     }
 
+    /* クリック後に出る全文エリア */
     .news-content {
       display: none;
       padding: 10px;
       box-sizing: border-box;
       background-color: #ffffff;
+      border-top: 1px solid #ddd;
+      margin-top: 10px;
+      white-space: pre-wrap;
     }
 
     .button {
@@ -114,14 +120,9 @@
       border-radius: 5px;
     }
 
-    .comment-section {
-      margin-top: 20px;
-    }
+    .comment-section { margin-top: 20px; }
 
-    .comment-form {
-      display: flex;
-      flex-direction: column;
-    }
+    .comment-form { display: flex; flex-direction: column; }
 
     .comment-form input,
     .comment-form textarea {
@@ -132,9 +133,7 @@
       font-family: Arial, sans-serif;
     }
 
-    .comment-form textarea {
-      font-size: 14px;
-    }
+    .comment-form textarea { font-size: 14px; }
 
     .comment-form button {
       padding: 10px;
@@ -194,60 +193,49 @@
   <div id="footer">© 2024 Steel News</div>
 
   <script>
-    // ▼▼▼ ここから記事データ（category を新カテゴリに合わせています） ▼▼▼
+    // ▼▼▼ 記事データ ▼▼▼
     const newsArticles = [
       {
         title: "Nippon vice chairman resumes USS takeover promotion tour",
         date: "05/06/2024",
         content:
           "Nippon Steel's vice chairman Takahiro Mori is back in the US to advance the company's acquisition of US Steel...",
-        category: "kallanish",
-        copyofNews:
-          "US domestic rebar prices have dropped to $790-800/short ton from $790-810/short ton last week..."
+        category: "kallanish"
       },
       {
         title: "Low EU consumption discourages coil price increases",
         date: "05/06/2024",
         content:
           "European steelmakers are considering hot rolled coil (HRC) price increases, but weak demand across end-use sectors...",
-        category: "kallanish",
-        copyofNews:
-          "US domestic rebar prices have dropped to $790-800/short ton from $790-810/short ton last week..."
+        category: "kallanish"
       },
       {
         title: "EU quota cap could impact Indian HRC imports",
         date: "06/06/2024",
         content:
-          "India may experience an increase in hot rolled coil (HRC) steel imports due to Europe’s residual tariff-rate quota...",
-        category: "kallanish",
-        copyofNews:
-          "India may see a rise in hot rolled coil steel imports as an unintended consequence of Europe’s residual tariff-rate quota..."
+          "India may experience an increase in hot rolled coil (HRC) steel imports due to Europe’s residual tariff-rate quota (TRQ) capping, leading to a redirection of HRC imports...",
+        category: "kallanish"
       },
       {
         title: "US calculates dumping margin for Korean wire rod",
         date: "06/06/2024",
         content:
-          "The US Department of Commerce preliminarily finds that South Korean producer and exporter Posco sold carbon and alloy steel wire rods below fair market value...",
-        category: "kallanish",
-        copyofNews:
-          "According to a 5 June update to the Federal Register, Commerce assigned Posco a weighted average dumping margin of 1.03%..."
+          "The US Department of Commerce preliminarily finds that South Korean producer and exporter Posco sold carbon and alloy steel wire rods below fair market value, Kallanish understands...",
+        category: "kallanish"
       },
       {
         title: "Russian steel consumption to grow 1-2% annually: Severstal",
         date: "06/06/2024",
         content:
-          "Projected Growth in Steel Consumption: Russian steel consumption is expected to grow by 1-2% annually over the next five years...",
-        category: "gmk",
-        copyofNews:
-          "Steel consumption in Russia will grow by approximately 1-2% annually over the next five years, but higher rates are also possible..."
+          "Projected Growth in Steel Consumption: Russian steel consumption is expected to grow by 1-2% annually over the next five years, with potential for higher rates if GDP grows as predicted...",
+        category: "gmk"
       }
     ];
 
-    #### The day definition
     // ===== Today / Past を日付で振り分け =====
-const todayList = newsArticles.filter(a => a.date === "30/01/2030");
-const pastList  = newsArticles.filter(a => a.date !== "30/01/2030");
-
+    // ※ご指定どおり固定日付で判定します
+    const todayList = newsArticles.filter(a => a.date === "30/01/2030");
+    const pastList  = newsArticles.filter(a => a.date !== "30/01/2030");
 
     const sections = {
       gmk: document.getElementById("gmk"),
@@ -256,8 +244,10 @@ const pastList  = newsArticles.filter(a => a.date !== "30/01/2030");
       academic: document.getElementById("academic")
     };
 
+    // タイトルクリックで開いた「詳細」を1つだけにする
     let activeContentDiv = null;
 
+    // コメント保存/復元（localStorage）
     function loadComments() {
       const commentsData = JSON.parse(localStorage.getItem("commentsData")) || {};
       newsArticles.forEach((article) => {
@@ -287,16 +277,33 @@ const pastList  = newsArticles.filter(a => a.date !== "30/01/2030");
       localStorage.setItem("commentsData", JSON.stringify(commentsData));
     }
 
+    // 先頭100文字だけ表示（プレビュー）
+    function makePreview(text, maxLen = 100) {
+      const t = String(text || "").replace(/\s+/g, " ").trim();
+      if (t.length <= maxLen) return t;
+      return t.slice(0, maxLen) + "...";
+    }
+
+    // 1記事UIを作る（タイトル＋100文字、タイトルクリックで全文表示）
     function createNewsItem(article, mode /* "today" | "past" */) {
-      const newsItem = document.createElement("div");
-      newsItem.className = "news-item";
-      newsItem.innerHTML = `${escapeHtml(article.title)}
-        <span class="news-content-small">${escapeHtml(article.content)}</span>`;
+      const wrapper = document.createElement("div");
+      wrapper.className = "news-item";
+
+      const titleEl = document.createElement("div");
+      titleEl.className = "news-title";
+      titleEl.textContent = article.title;
+
+      const previewEl = document.createElement("span");
+      previewEl.className = "news-preview";
+      previewEl.textContent = makePreview(article.content, 100);
 
       const contentDiv = document.createElement("div");
       contentDiv.className = "news-content";
       contentDiv.innerHTML = `
-        <button class="button copy-btn" data-copy="${escapeAttr(article.copyofNews)}">Copy Detail</button>
+        <div><strong>Date:</strong> ${escapeHtml(article.date)}</div>
+        <div style="margin-top:8px;">${escapeHtml(article.content)}</div>
+
+        <button class="button copy-btn" data-copy="${escapeAttr(article.content)}">Copy Full Text</button>
 
         <div class="comment-section">
           <form class="comment-form">
@@ -312,16 +319,9 @@ const pastList  = newsArticles.filter(a => a.date !== "30/01/2030");
         </div>
       `;
 
-      newsItem.appendChild(contentDiv);
-
-      newsItem.addEventListener("click", (event) => {
-        // クリックで開閉（ボタンやフォーム操作は除外）
-        if (
-          event.target.closest("button") ||
-          event.target.closest("form") ||
-          event.target.closest("input") ||
-          event.target.closest("textarea")
-        ) return;
+      // ★タイトルクリックで開閉（ここが要望の挙動）
+      titleEl.addEventListener("click", (event) => {
+        event.stopPropagation();
 
         if (activeContentDiv && activeContentDiv !== contentDiv) {
           activeContentDiv.style.display = "none";
@@ -331,13 +331,13 @@ const pastList  = newsArticles.filter(a => a.date !== "30/01/2030");
         activeContentDiv = next === "block" ? contentDiv : null;
       });
 
-      // Copy Detail
+      // Copy Full Text
       contentDiv.querySelector(".copy-btn").addEventListener("click", (e) => {
         e.stopPropagation();
         const txt = e.currentTarget.getAttribute("data-copy") || "";
         navigator.clipboard?.writeText(txt);
         e.currentTarget.textContent = "Copied!";
-        setTimeout(() => (e.currentTarget.textContent = "Copy Detail"), 900);
+        setTimeout(() => (e.currentTarget.textContent = "Copy Full Text"), 900);
       });
 
       // Comment submit
@@ -363,25 +363,28 @@ const pastList  = newsArticles.filter(a => a.date !== "30/01/2030");
         form.querySelector("textarea").value = "";
       });
 
-      return newsItem;
+      wrapper.appendChild(titleEl);
+      wrapper.appendChild(previewEl);
+      wrapper.appendChild(contentDiv);
+
+      return wrapper;
     }
 
-    // Today's News：カテゴリ別に追加
-    // ===== Today's News：今日分だけ表示 =====
-todayList.forEach((article) => {
-  const item = createNewsItem(article, "today");
-  if (sections[article.category]) {
-    sections[article.category].appendChild(item);
-  } else {
-    sections.academic.appendChild(item);
-  }
-});
+    // ===== Today's News：今日分だけ表示（カテゴリ別）=====
+    todayList.forEach((article) => {
+      const item = createNewsItem(article, "today");
+      if (sections[article.category]) {
+        sections[article.category].appendChild(item);
+      } else {
+        sections.academic.appendChild(item);
+      }
+    });
 
-    // Past News：全件追加
+    // ===== Past News：過去分だけ表示 =====
     const pastPage = document.getElementById("page-past");
-pastList.forEach((article) => {
-  pastPage.appendChild(createNewsItem(article, "past"));
-});
+    pastList.forEach((article) => {
+      pastPage.appendChild(createNewsItem(article, "past"));
+    });
 
     // メニュー切り替え
     document.querySelectorAll("#menu a[data-nav]").forEach((a) => {
@@ -395,6 +398,7 @@ pastList.forEach((article) => {
     function showSection(section) {
       document.querySelectorAll(".page").forEach((p) => p.classList.remove("active"));
       document.getElementById(`page-${section}`).classList.add("active");
+
       // ページ切替時に開いている詳細は閉じる
       if (activeContentDiv) {
         activeContentDiv.style.display = "none";
@@ -402,7 +406,7 @@ pastList.forEach((article) => {
       }
     }
 
-    // HTMLエスケープ系（簡易）
+    // HTMLエスケープ（簡易）
     function escapeHtml(str) {
       return String(str)
         .replaceAll("&", "&amp;")
