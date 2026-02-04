@@ -1067,9 +1067,29 @@ India’s stated intent to increase purchases of US coal and energy could furthe
     ];
 
     // ===== Today / Past を日付で振り分け =====
-    const TODAY_DATE = "04/02/2026";
-    const todayList = newsArticles.filter(a => a.date === TODAY_DATE);
-    const pastList  = newsArticles.filter(a => a.date !== TODAY_DATE);
+    // ===== Today / Past を日付レンジで振り分け =====
+const BASE_DATE = new Date("2026-02-04");
+
+// 開始日（2日前）
+const START_DATE = new Date(BASE_DATE);
+START_DATE.setDate(BASE_DATE.getDate() - 2);
+
+// 記事日付を Date に変換する関数
+const parseDate = (dateStr) => {
+  const [dd, mm, yyyy] = dateStr.split("/");
+  return new Date(`${yyyy}-${mm}-${dd}`);
+};
+
+const todayList = newsArticles.filter(a => {
+  const articleDate = parseDate(a.date);
+  return articleDate >= START_DATE && articleDate <= BASE_DATE;
+});
+
+const pastList = newsArticles.filter(a => {
+  const articleDate = parseDate(a.date);
+  return articleDate < START_DATE;
+});
+
 
     const sections = {
       gmk: document.getElementById("gmk"),
@@ -1193,6 +1213,7 @@ India’s stated intent to increase purchases of US coal and energy could furthe
   </script>
 </body>
 </html>
+
 
 
 
